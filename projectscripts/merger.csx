@@ -3,8 +3,9 @@ using UndertaleModLib.Util;
 using UndertaleModLib.Decompiler;
 
 // A script to merge Nubby's Number Factory and the modloader, Nubby's Forgery.
-// Scripts used for reference:
+// Scripts used for reference from UndertaleModTool:
 // ImportGraphics.csx
+// GameObjectCopyInternal.csx
 
 EnsureDataLoaded();
 
@@ -178,6 +179,92 @@ void applyPatches(string codeEntryName, string patches) {
 		};
 		ImportGMLString(codeEntryName, finalResult);
 	}
+}
+
+
+
+
+
+// Duplicating generic objects
+
+UndertaleGameObject obj_generic_item0 = Data.GameObjects.ByName("obj_generic_item0");
+for (int i = 1; i < 64; i++) {
+	cloneObject(obj_generic_item0, "obj_generic_item" + i.ToString());
+}
+
+
+UndertaleGameObject cloneObject(UndertaleGameObject obj, string newName) {
+	// copied with some modifications from GameObjectCopyInternal.csx
+
+	UndertaleGameObject donorOBJ = obj;
+	UndertaleGameObject nativeOBJ = new UndertaleGameObject();
+	nativeOBJ.Name = Data.Strings.MakeString(newName);
+	Data.GameObjects.Add(nativeOBJ);
+	nativeOBJ.Visible = donorOBJ.Visible;
+	nativeOBJ.Solid = donorOBJ.Solid;
+	nativeOBJ.Depth = donorOBJ.Depth;
+	nativeOBJ.Persistent = donorOBJ.Persistent;
+	nativeOBJ.ParentId = donorOBJ.ParentId;
+	if (donorOBJ.TextureMaskId != null)
+		nativeOBJ.TextureMaskId = Data.Sprites.ByName(donorOBJ.TextureMaskId.Name.Content);
+
+	nativeOBJ.Events.Clear();
+	for (var i = 0; i < donorOBJ.Events.Count; i++)
+	{
+		UndertalePointerList<UndertaleGameObject.Event> newEvent = new UndertalePointerList<UndertaleGameObject.Event>();
+		foreach (UndertaleGameObject.Event evnt in donorOBJ.Events[i])
+		{
+			UndertaleGameObject.Event newevnt = new UndertaleGameObject.Event();
+			foreach (UndertaleGameObject.EventAction donorACT in evnt.Actions)
+			{
+				UndertaleGameObject.EventAction nativeACT = new UndertaleGameObject.EventAction();
+				newevnt.Actions.Add(nativeACT);
+				nativeACT.LibID = donorACT.LibID;
+				nativeACT.ID = donorACT.ID;
+				nativeACT.Kind = donorACT.Kind;
+				nativeACT.UseRelative = donorACT.UseRelative;
+				nativeACT.IsQuestion = donorACT.IsQuestion;
+				nativeACT.UseApplyTo = donorACT.UseApplyTo;
+				nativeACT.ExeType = donorACT.ExeType;
+				if (donorACT.ActionName != null)
+					nativeACT.ActionName = Data.Strings.MakeString(donorACT.ActionName.Content);
+				if (donorACT.CodeId?.Name?.Content != null)
+				{
+					string NewGMLName = ((donorACT.CodeId?.Name?.Content).Replace(obj.Name.Content, newName));
+					nativeACT.CodeId = donorACT.CodeId;
+					nativeACT.CodeId.LocalsCount = donorACT.CodeId.LocalsCount;
+					nativeACT.CodeId.ArgumentsCount = donorACT.CodeId.ArgumentsCount;
+					nativeACT.CodeId.WeirdLocalsFlag = donorACT.CodeId.WeirdLocalsFlag;
+					nativeACT.CodeId.Offset = donorACT.CodeId.Offset;
+					nativeACT.CodeId.WeirdLocalFlag = donorACT.CodeId.WeirdLocalFlag;
+					if (Data?.GeneralInfo.BytecodeVersion > 14)
+					{
+						UndertaleCodeLocals donorlocals = Data.CodeLocals.ByName(donorACT.CodeId?.Name?.Content);
+						UndertaleCodeLocals nativelocals = new UndertaleCodeLocals();
+						nativelocals.Name = Data.Strings.MakeString(NewGMLName);
+						nativelocals.Locals.Clear();
+						foreach (UndertaleCodeLocals.LocalVar argsLocalDonor in donorlocals.Locals)
+						{
+							UndertaleCodeLocals.LocalVar argsLocal = new UndertaleCodeLocals.LocalVar();
+							argsLocal.Name = Data.Strings.MakeString(argsLocalDonor.Name.Content);
+							argsLocal.Index = argsLocalDonor.Index;
+							nativelocals.Locals.Add(argsLocal);
+						}
+						nativeACT.CodeId.LocalsCount = (uint)nativelocals.Locals.Count;
+					}
+				}
+				nativeACT.ArgumentCount = donorACT.ArgumentCount;
+				nativeACT.Who = donorACT.Who;
+				nativeACT.Relative = donorACT.Relative;
+				nativeACT.IsNot = donorACT.IsNot;
+				nativeACT.UnknownAlwaysZero = donorACT.UnknownAlwaysZero;
+			}
+			newevnt.EventSubtype = evnt.EventSubtype;
+			newEvent.Add(newevnt);
+		}
+		nativeOBJ.Events.Add(newEvent);
+	}
+	return nativeOBJ;
 }
 
 

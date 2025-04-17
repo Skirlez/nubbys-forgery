@@ -61,6 +61,7 @@ echo "-------------------------------"
 echo "Building NF's GameMaker project"
 echo "-------------------------------"
 
+
 $IGOR_PATH \
     -j=8 \
     --user="$USER_DIRECTORY_PATH" \

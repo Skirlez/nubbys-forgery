@@ -1,3 +1,4 @@
+global.empty_method = method(self, empty_function)
 init()
 expose_things_to_catspeak();
-read_all_mods()
+global.mods = read_all_mods()
