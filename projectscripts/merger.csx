@@ -226,33 +226,8 @@ UndertaleGameObject cloneObject(UndertaleGameObject obj, string newName) {
 				nativeACT.IsQuestion = donorACT.IsQuestion;
 				nativeACT.UseApplyTo = donorACT.UseApplyTo;
 				nativeACT.ExeType = donorACT.ExeType;
-				if (donorACT.ActionName != null)
-					nativeACT.ActionName = Data.Strings.MakeString(donorACT.ActionName.Content);
-				if (donorACT.CodeId?.Name?.Content != null)
-				{
-					string NewGMLName = ((donorACT.CodeId?.Name?.Content).Replace(obj.Name.Content, newName));
-					nativeACT.CodeId = donorACT.CodeId;
-					nativeACT.CodeId.LocalsCount = donorACT.CodeId.LocalsCount;
-					nativeACT.CodeId.ArgumentsCount = donorACT.CodeId.ArgumentsCount;
-					nativeACT.CodeId.WeirdLocalsFlag = donorACT.CodeId.WeirdLocalsFlag;
-					nativeACT.CodeId.Offset = donorACT.CodeId.Offset;
-					nativeACT.CodeId.WeirdLocalFlag = donorACT.CodeId.WeirdLocalFlag;
-					if (Data?.GeneralInfo.BytecodeVersion > 14)
-					{
-						UndertaleCodeLocals donorlocals = Data.CodeLocals.ByName(donorACT.CodeId?.Name?.Content);
-						UndertaleCodeLocals nativelocals = new UndertaleCodeLocals();
-						nativelocals.Name = Data.Strings.MakeString(NewGMLName);
-						nativelocals.Locals.Clear();
-						foreach (UndertaleCodeLocals.LocalVar argsLocalDonor in donorlocals.Locals)
-						{
-							UndertaleCodeLocals.LocalVar argsLocal = new UndertaleCodeLocals.LocalVar();
-							argsLocal.Name = Data.Strings.MakeString(argsLocalDonor.Name.Content);
-							argsLocal.Index = argsLocalDonor.Index;
-							nativelocals.Locals.Add(argsLocal);
-						}
-						nativeACT.CodeId.LocalsCount = (uint)nativelocals.Locals.Count;
-					}
-				}
+				nativeACT.ActionName = donorACT.ActionName;
+				nativeACT.CodeId = donorACT.CodeId;
 				nativeACT.ArgumentCount = donorACT.ArgumentCount;
 				nativeACT.Who = donorACT.Who;
 				nativeACT.Relative = donorACT.Relative;

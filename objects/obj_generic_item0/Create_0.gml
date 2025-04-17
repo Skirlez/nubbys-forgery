@@ -1,3 +1,4 @@
+allocated_id = real(string_digits(object_get_name(object_index)))
 try {
 	on_create();
 }
