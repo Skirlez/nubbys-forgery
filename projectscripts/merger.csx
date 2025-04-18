@@ -193,53 +193,49 @@ for (int i = 1; i < 64; i++) {
 }
 
 
-UndertaleGameObject cloneObject(UndertaleGameObject obj, string newName) {
+UndertaleGameObject cloneObject(UndertaleGameObject sourceObj, string newName) {
 	// copied with some modifications from GameObjectCopyInternal.csx
 
-	UndertaleGameObject donorOBJ = obj;
-	UndertaleGameObject nativeOBJ = new UndertaleGameObject();
-	nativeOBJ.Name = Data.Strings.MakeString(newName);
-	Data.GameObjects.Add(nativeOBJ);
-	nativeOBJ.Visible = donorOBJ.Visible;
-	nativeOBJ.Solid = donorOBJ.Solid;
-	nativeOBJ.Depth = donorOBJ.Depth;
-	nativeOBJ.Persistent = donorOBJ.Persistent;
-	nativeOBJ.ParentId = donorOBJ.ParentId;
-	if (donorOBJ.TextureMaskId != null)
-		nativeOBJ.TextureMaskId = Data.Sprites.ByName(donorOBJ.TextureMaskId.Name.Content);
-
-	nativeOBJ.Events.Clear();
-	for (var i = 0; i < donorOBJ.Events.Count; i++)
+	UndertaleGameObject obj = new UndertaleGameObject();
+	obj.Name = Data.Strings.MakeString(newName);
+	Data.GameObjects.Add(obj);
+	obj.Visible = sourceObj.Visible;
+	obj.Solid = sourceObj.Solid;
+	obj.Depth = sourceObj.Depth;
+	obj.Persistent = sourceObj.Persistent;
+	obj.ParentId = sourceObj.ParentId;
+	obj.Events.Clear();
+	for (var i = 0; i < sourceObj.Events.Count; i++)
 	{
 		UndertalePointerList<UndertaleGameObject.Event> newEvent = new UndertalePointerList<UndertaleGameObject.Event>();
-		foreach (UndertaleGameObject.Event evnt in donorOBJ.Events[i])
+		foreach (UndertaleGameObject.Event evnt in sourceObj.Events[i])
 		{
 			UndertaleGameObject.Event newevnt = new UndertaleGameObject.Event();
-			foreach (UndertaleGameObject.EventAction donorACT in evnt.Actions)
+			foreach (UndertaleGameObject.EventAction sourceAction in evnt.Actions)
 			{
-				UndertaleGameObject.EventAction nativeACT = new UndertaleGameObject.EventAction();
-				newevnt.Actions.Add(nativeACT);
-				nativeACT.LibID = donorACT.LibID;
-				nativeACT.ID = donorACT.ID;
-				nativeACT.Kind = donorACT.Kind;
-				nativeACT.UseRelative = donorACT.UseRelative;
-				nativeACT.IsQuestion = donorACT.IsQuestion;
-				nativeACT.UseApplyTo = donorACT.UseApplyTo;
-				nativeACT.ExeType = donorACT.ExeType;
-				nativeACT.ActionName = donorACT.ActionName;
-				nativeACT.CodeId = donorACT.CodeId;
-				nativeACT.ArgumentCount = donorACT.ArgumentCount;
-				nativeACT.Who = donorACT.Who;
-				nativeACT.Relative = donorACT.Relative;
-				nativeACT.IsNot = donorACT.IsNot;
-				nativeACT.UnknownAlwaysZero = donorACT.UnknownAlwaysZero;
+				UndertaleGameObject.EventAction action = new UndertaleGameObject.EventAction();
+				newevnt.Actions.Add(action);
+				action.LibID = sourceAction.LibID;
+				action.ID = sourceAction.ID;
+				action.Kind = sourceAction.Kind;
+				action.UseRelative = sourceAction.UseRelative;
+				action.IsQuestion = sourceAction.IsQuestion;
+				action.UseApplyTo = sourceAction.UseApplyTo;
+				action.ExeType = sourceAction.ExeType;
+				action.ActionName = sourceAction.ActionName;
+				action.CodeId = sourceAction.CodeId;
+				action.ArgumentCount = sourceAction.ArgumentCount;
+				action.Who = sourceAction.Who;
+				action.Relative = sourceAction.Relative;
+				action.IsNot = sourceAction.IsNot;
+				action.UnknownAlwaysZero = sourceAction.UnknownAlwaysZero;
 			}
 			newevnt.EventSubtype = evnt.EventSubtype;
 			newEvent.Add(newevnt);
 		}
-		nativeOBJ.Events.Add(newEvent);
+		obj.Events.Add(newEvent);
 	}
-	return nativeOBJ;
+	return obj;
 }
 
 

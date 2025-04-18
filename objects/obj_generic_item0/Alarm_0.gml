@@ -1,6 +1,6 @@
 try {
-	on_trigger()	
+	item.on_trigger()	
 }
 catch (e) {
-	log($"Item {string_id} errored on trigger: {e}")
+	log($"Item {item.string_id} errored on trigger: {e}")
 }

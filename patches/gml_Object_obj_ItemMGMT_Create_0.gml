@@ -1,3 +1,3 @@
 // register modded items
-// TAIL
+// TARGET: TAIL
 register_items()

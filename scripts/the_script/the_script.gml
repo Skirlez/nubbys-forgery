@@ -4,6 +4,7 @@ function create_mod(buffer) {
 	static mod_contract = {
 		string_id : "",
 		display_name : "",
+		description : "",
 		version : "",
 		modloader_version : 0,
 		on_load : global.empty_method,
@@ -37,13 +38,15 @@ function create_modded_item(buffer, filename, mod_id) {
 	static item_contract = {
 		string_id : "",
 		display_name : "",
+		description : "",
 		trigger_text : "",
 		alt_trigger_text : "",
+		sprite : "",
 		level : 0,
 		tier : 0,
 		status : 0,
 		effect_id : "",
-		item_pool : 0,
+		pool : 0,
 		offset_price : 0,
 		mutant_item_id : "",
 		odds_weight_early : 0,
@@ -151,7 +154,7 @@ function read_all_mods() {
 			}
 			
 			
-			array_push(wod.items, item)
+			array_push(wod.items, result_item.value)
 		}
 		
 		try {
@@ -167,21 +170,31 @@ function read_all_mods() {
 // called from gml_Object_obj_ItemMGMT_Create_0
 function register_items() {
 	
-	var item_number_id = array_length(agi("obj_ItemMGMT").ItemID)
-	agi("scr_Init_Item")(item_number_id,
-		agi("scr_Text")("item_name0"),
-		obj_I_Pants,
-		1, 
-		0, 
-		0, 
-		0, 
-		"popper", 
-		1, 
-		0, 
-		68, 
-		"10Popped", 
-		"PassGoal",
-		agi("scr_Text")("item_desc0", "\n"))
-	scr_Init_ItemExt(0, 5, 5, 5)
+	for (var i = 0; i < array_length(global.mods); i++) {
+		var wod = global.mods[i];
+		for (var j = 0; j < array_length(wod.items); j++) {
+			var item = wod.items[j];
+			var item_number_id = array_length(agi("obj_ItemMGMT").ItemID)
+			var obj = allocate_object_for_item(item)
+
+			object_set_sprite(obj, agi(item.sprite))
+			agi("scr_Init_Item")(item_number_id,
+				agi("scr_Text")(item.display_name),
+				obj,
+				item.level, 
+				1, 
+				item.tier, 
+				item.status,
+				item.effect_id, 
+				item.pool, 
+				item.offset_price, 
+				item.mutant_item_id, 
+				item.trigger_text, 
+				item.alt_trigger_text,
+				agi("scr_Text")(item.description, "\n"))
+			agi("scr_Init_ItemExt")(item_number_id, 
+				item.odds_weight_early, item.odds_weight_mid, item.odds_weight_end)
+		}
+	}
 	
 }

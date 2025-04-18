@@ -1,1 +1,2 @@
 ds_map_destroy(global.happenings)
+ds_map_destroy(global.item_objects_allocated)

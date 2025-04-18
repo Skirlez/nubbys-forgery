@@ -37,7 +37,9 @@
     "IDEVersion": "2023.4.0.84",
   },
   "resources": [
+    {"id":{"name":"obj_functional_object","path":"objects/obj_functional_object/obj_functional_object.yy",},},
     {"id":{"name":"scr_catspeak_presets","path":"scripts/scr_catspeak_presets/scr_catspeak_presets.yy",},},
+    {"id":{"name":"generic_object_allocation","path":"scripts/generic_object_allocation/generic_object_allocation.yy",},},
     {"id":{"name":"scr_catspeak_lexer","path":"scripts/scr_catspeak_lexer/scr_catspeak_lexer.yy",},},
     {"id":{"name":"the_script","path":"scripts/the_script/the_script.yy",},},
     {"id":{"name":"error_handling","path":"scripts/error_handling/error_handling.yy",},},

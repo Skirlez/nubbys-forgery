@@ -20,6 +20,8 @@
     {"name":"Timelines","order":8,"path":"folders/Timelines.yy",},
   ],
   "ResourceOrderSettings": [
+    {"name":"obj_functional_object","order":3,"path":"objects/obj_functional_object/obj_functional_object.yy",},
+    {"name":"generic_object_allocation","order":5,"path":"scripts/generic_object_allocation/generic_object_allocation.yy",},
     {"name":"scr_catspeak_lexer","order":2,"path":"scripts/scr_catspeak_lexer/scr_catspeak_lexer.yy",},
     {"name":"error_handling","order":1,"path":"scripts/error_handling/error_handling.yy",},
     {"name":"scr_catspeak_parser","order":3,"path":"scripts/scr_catspeak_parser/scr_catspeak_parser.yy",},
