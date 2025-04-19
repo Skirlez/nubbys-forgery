@@ -34,7 +34,7 @@
   "isEcma": false,
   "LibraryEmitters": [],
   "MetaData": {
-    "IDEVersion": "2023.4.0.84",
+    "IDEVersion": "2023.8.2.108",
   },
   "resources": [
     {"id":{"name":"obj_functional_object","path":"objects/obj_functional_object/obj_functional_object.yy",},},
@@ -43,12 +43,15 @@
     {"id":{"name":"scr_catspeak_lexer","path":"scripts/scr_catspeak_lexer/scr_catspeak_lexer.yy",},},
     {"id":{"name":"the_script","path":"scripts/the_script/the_script.yy",},},
     {"id":{"name":"error_handling","path":"scripts/error_handling/error_handling.yy",},},
+    {"id":{"name":"file_io_util","path":"scripts/file_io_util/file_io_util.yy",},},
     {"id":{"name":"obj_modloader","path":"objects/obj_modloader/obj_modloader.yy",},},
     {"id":{"name":"scr_catspeak_parser","path":"scripts/scr_catspeak_parser/scr_catspeak_parser.yy",},},
     {"id":{"name":"empty_function","path":"scripts/empty_function/empty_function.yy",},},
     {"id":{"name":"scr_catspeak_environment","path":"scripts/scr_catspeak_environment/scr_catspeak_environment.yy",},},
+    {"id":{"name":"expose_to_catspeak","path":"scripts/expose_to_catspeak/expose_to_catspeak.yy",},},
     {"id":{"name":"scr_catspeak_codegen","path":"scripts/scr_catspeak_codegen/scr_catspeak_codegen.yy",},},
     {"id":{"name":"obj_generic_item0","path":"objects/obj_generic_item0/obj_generic_item0.yy",},},
+    {"id":{"name":"mod_translations","path":"scripts/mod_translations/mod_translations.yy",},},
     {"id":{"name":"happenings_script","path":"scripts/happenings_script/happenings_script.yy",},},
     {"id":{"name":"scr_catspeak_init","path":"scripts/scr_catspeak_init/scr_catspeak_init.yy",},},
     {"id":{"name":"scr_catspeak_ir","path":"scripts/scr_catspeak_ir/scr_catspeak_ir.yy",},},
@@ -60,6 +63,7 @@
   "RoomOrderNodes": [
     {"roomId":{"name":"Room1","path":"rooms/Room1/Room1.yy",},},
   ],
+  "templateType": null,
   "TextureGroups": [
     {"resourceType":"GMTextureGroup","resourceVersion":"1.3","name":"Default","autocrop":true,"border":2,"compressFormat":"bz2","directory":"","groupParent":null,"isScaled":true,"loadType":"default","mipsToGenerate":0,"targets":-1,},
   ],

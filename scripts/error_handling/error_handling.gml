@@ -48,5 +48,6 @@ function error_with_id(error_id, text) : generic_error(text) constructor {
 function log(text) {
 	// TODO
 	show_debug_message(text)
+	show_message(text)
 	
 }

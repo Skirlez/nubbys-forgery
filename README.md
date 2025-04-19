@@ -1,6 +1,11 @@
 # Nubby's Forgery
 W.I.P Modloader for Nubby's Number Factory
 
+## Why
+Every GameMaker has a data.win file which holds most of not all of its assets and code.
+
+Since it is a single binary file, it is rather simple to create mods for GameMaker games by editing it and distributing a differential patch (a .xdelta)
+
 ## How it works
 This repository contains a GameMaker project. This project is built, and then merged into Nubby's Number Factory using an UndertaleModTool script.
 This structure is what allows the project to be open-sourced (and also makes it resilient to updates!)

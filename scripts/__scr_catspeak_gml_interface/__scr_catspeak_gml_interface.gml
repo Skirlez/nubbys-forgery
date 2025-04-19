@@ -3013,12 +3013,14 @@ function __catspeak_get_gml_interface() {
                 db[$ "view_camera_set"] = method(undefined, function(idx, val) { view_camera[idx] = val });
             } catch (ce_) { skipped = true }
         }
+		/* IDC
         if (skipped) {
             __catspeak_error_silent(
                 "some functions/constants in the GML interface were skipped\n",
                 "this may be because your GameMaker version is out of date, or missing them"
             );
         }
+		*/
     }
     return db;
 }

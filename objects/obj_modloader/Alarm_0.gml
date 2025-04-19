@@ -1,0 +1,1 @@
+agi("obj_GAME").AllowConsole = is_console_and_devmode_enabled()
