@@ -1,13 +1,13 @@
 {
   "resourceType": "GMRoom",
   "resourceVersion": "1.0",
-  "name": "Room1",
+  "name": "this_has_to_be_here_to_compile",
   "creationCodeFile": "",
   "inheritCode": false,
   "inheritCreationOrder": false,
   "inheritLayers": false,
   "instanceCreationOrder": [
-    {"name":"inst_7EC64007","path":"rooms/Room1/Room1.yy",},
+    {"name":"inst_7EC64007","path":"rooms/this_has_to_be_here_to_compile/this_has_to_be_here_to_compile.yy",},
   ],
   "isDnd": false,
   "layers": [

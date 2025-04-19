@@ -29,6 +29,8 @@ function create_mod(buffer) {
 	globals.foods = []
 	globals.sprites = []
 	globals.translations = ds_map_create();
+	globals.sprites = ds_map_create();
+	globals.audio_streams = ds_map_create();
 	
 	// TODO check invalid characters
 	return new result_ok(globals)
@@ -42,7 +44,7 @@ function create_modded_item(buffer, filename, mod_id) {
 		description : "",
 		trigger_condition : "",
 		alt_trigger_condition : "",
-		sprite : "",
+		sprite : agi("obj_empty"),
 		level : 0,
 		type : 0,
 		tier : 0,
@@ -55,6 +57,7 @@ function create_modded_item(buffer, filename, mod_id) {
 		odds_weight_mid : 0,
 		odds_weight_end : 0,
 		on_create : global.empty_method,
+		on_round_init : global.empty_method,
 		on_step : global.empty_method,
 		on_trigger : global.empty_method,
 	}
@@ -66,6 +69,7 @@ function create_modded_item(buffer, filename, mod_id) {
 	var main = Catspeak.compile(ir);
 	catspeak_execute(main);
 	var globals = catspeak_globals(main);
+
 	
 	
 	var discompliance = get_struct_discompliance_with_contract(globals, item_contract)
@@ -77,14 +81,28 @@ function create_modded_item(buffer, filename, mod_id) {
 	}
 	
 	
-	var item_id = globals.string_id
-	if (string_count(":", item_id) > 0)
-		return result_error(new generic_error("Forbidden character in item_id (:)"))
-
+	/*
+	if (string_count(":", globals.string_id) > 1)
+		return new result_error(new generic_error("Too many semicolons in string_id: You should only have 1"))
+	*/
 	
 	return new result_ok(globals)
 }
 
+
+function run_mod_load_sprites_function(buffer, sprites_dir, mod_id) {
+	var ir = Catspeak.parse(buffer);
+	var main = Catspeak.compile(ir);
+	catspeak_execute(main);
+	var globals = catspeak_globals(main);
+	try {
+		globals.load_sprites(sprites_dir)
+	}
+	catch (e) {
+		log($"Error while running load_sprites for mod {mod_id}: {e}")	
+	}
+	
+}
 
 function init() {
 	global.mods_directory = game_save_id + "mods/";
@@ -92,16 +110,32 @@ function init() {
 }
 
 function clear_all_mods() {
+	ds_map_clear(global.mod_id_to_mod_map)
+	
 	for (var i = 0; i < array_length(global.mods); i++) {
 		var wod = global.mods[i];
-		var keys = ds_map_keys_to_array(wod.translations)
-		for (var j = 0; j < array_length(keys); j++) {
-			ds_grid_destroy(ds_map_find_value(wod.translations, keys[i]))	
+		var translation_keys = ds_map_keys_to_array(wod.translations)
+		for (var j = 0; j < array_length(translation_keys); j++) {
+			ds_grid_destroy(ds_map_find_value(wod.translations, translation_keys[i]))	
 		}
-		ds_map_clear(wod.translations)
+		ds_map_destroy(wod.translations)
+		
+		var sprite_keys = ds_map_keys_to_array(wod.sprites)
+		for (var j = 0; j < array_length(sprite_keys); j++) {
+			sprite_delete(ds_map_find_value(wod.sprites, sprite_keys[i]))	
+		}
+		ds_map_destroy(wod.sprites)
+		
+		var audio_stream_keys = ds_map_keys_to_array(wod.audio_streams)
+		for (var j = 0; j < array_length(audio_stream_keys); j++) {
+			audio_destroy_stream(ds_map_find_value(wod.sounds, audio_stream_keys[i]))	
+		}
+		ds_map_destroy(wod.audio_streams)
+		
 	}
 	// the rest can be automatically garbage collected
 	global.mods = []
+	
 }
 
 // Reads all mods and returns a list of their structs
@@ -122,7 +156,13 @@ function read_all_mods() {
 			continue;
 		}
 		var wod = mod_result.value;
-			
+		array_push(global.mods, wod);
+		ds_map_set(global.mod_id_to_mod_map, wod.string_id, wod);
+	
+		var sprites_dir = mod_dir + "sprites/";
+		var sprites_buffer = buffer_load(sprites_dir + "sprites.meow")
+		run_mod_load_sprites_function(sprites_buffer, sprites_dir, wod.string_id)
+
 	
 		var items_dir = mod_dir + "items/";
 		var item_files = get_all_files(items_dir, "meow")
@@ -138,6 +178,12 @@ function read_all_mods() {
 			array_push(wod.items, result_item.value)
 		}
 		
+		
+		
+		
+
+		
+		
 		// we're gonna assume there's only 1 en.csv for now
 		var trans_dir = mod_dir + "trans/";
 		//var csv_files = get_all_files(trans_dir, "csv")
@@ -151,12 +197,15 @@ function read_all_mods() {
 			wod.on_load();
 		}
 		catch (e) {
-			log($"Mod {wod.string_id} errored on load: {e}")	
-			continue;
+			log($"Mod {wod.string_id} errored on load: {e}")
+			// TODO what to do
 		}
-		array_push(global.mods, wod);
+		
+		
 	}
 }
+
+
 
 // called from gml_Object_obj_ItemMGMT_Create_0
 function register_items() {
@@ -171,7 +220,7 @@ function register_items() {
 			var item_number_id = array_length(agi("obj_ItemMGMT").ItemID)
 			var obj = allocate_object_for_item(item)
 			
-			object_set_sprite(obj, agi(item.sprite))
+			object_set_sprite(obj, item.sprite)
 			agi("scr_Init_Item")(item_number_id,
 				agi("scr_Text")(item.display_name),
 				obj,

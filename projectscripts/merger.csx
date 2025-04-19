@@ -239,8 +239,8 @@ UndertaleGameObject cloneObject(UndertaleGameObject sourceObj, string newName) {
 }
 
 
-Data.GeneralInfo.FileName = modloaderData.GeneralInfo.FileName;
+// Changes the save location to nubby's forgery
 Data.GeneralInfo.Name = modloaderData.GeneralInfo.Name;
-Data.GeneralInfo.DisplayName = modloaderData.GeneralInfo.DisplayName;
+
 
 ScriptMessage("Done! Nubby's Forgery has been merged!");

@@ -10,7 +10,7 @@ item = get_allocated_item(allocated_id)
 // Get the item's index ID
 MyItemID = ds_map_find_value(global.item_id_to_index_map, item.string_id)
 
-// the following variables are set before create, so modders can override if they want to for some reason
+// The following variables are set before create, so modders can override if they want to for some reason
 EvType = agi("obj_ItemMGMT").ItemTrig[MyItemID]
 EvTypeAlt = "Empty"
 EvTypeExt = "Empty"
