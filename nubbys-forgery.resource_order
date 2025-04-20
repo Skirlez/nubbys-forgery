@@ -21,10 +21,13 @@
   ],
   "ResourceOrderSettings": [
     {"name":"obj_functional_object","order":3,"path":"objects/obj_functional_object/obj_functional_object.yy",},
+    {"name":"nf_catspeak_set_globals","order":12,"path":"scripts/nf_catspeak_set_globals/nf_catspeak_set_globals.yy",},
     {"name":"generic_object_allocation","order":5,"path":"scripts/generic_object_allocation/generic_object_allocation.yy",},
     {"name":"scr_catspeak_lexer","order":2,"path":"scripts/scr_catspeak_lexer/scr_catspeak_lexer.yy",},
+    {"name":"namespaced","order":10,"path":"scripts/namespaced/namespaced.yy",},
     {"name":"error_handling","order":1,"path":"scripts/error_handling/error_handling.yy",},
     {"name":"file_io_util","order":8,"path":"scripts/file_io_util/file_io_util.yy",},
+    {"name":"mod_items","order":11,"path":"scripts/mod_items/mod_items.yy",},
     {"name":"asset_registration","order":9,"path":"scripts/asset_registration/asset_registration.yy",},
     {"name":"scr_catspeak_parser","order":3,"path":"scripts/scr_catspeak_parser/scr_catspeak_parser.yy",},
     {"name":"empty_function","order":3,"path":"scripts/empty_function/empty_function.yy",},
@@ -38,6 +41,7 @@
     {"name":"scr_catspeak_ir","order":1,"path":"scripts/scr_catspeak_ir/scr_catspeak_ir.yy",},
     {"name":"obj_ItemParent","order":2,"path":"objects/obj_ItemParent/obj_ItemParent.yy",},
     {"name":"struct_contracts","order":2,"path":"scripts/struct_contracts/struct_contracts.yy",},
+    {"name":"mod_sprites","order":13,"path":"scripts/mod_sprites/mod_sprites.yy",},
     {"name":"__scr_catspeak_gml_interface","order":3,"path":"scripts/__scr_catspeak_gml_interface/__scr_catspeak_gml_interface.yy",},
   ],
 }

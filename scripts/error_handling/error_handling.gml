@@ -41,7 +41,7 @@ function result_error(error) constructor {
 function generic_error(text) constructor {
 	self.text = text;
 }
-function error_with_id(error_id, text) : generic_error(text) constructor {
+function error_with_id(error_id) constructor {
 	self.error_id = error_id;
 }
 

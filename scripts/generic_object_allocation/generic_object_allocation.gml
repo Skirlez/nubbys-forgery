@@ -10,7 +10,7 @@ function allocate_object_for_item(item) {
 function get_allocated_item(num) {
 	return global.allocated_item_object_array[num]
 }
-function free_all_allocated_items() {
+function free_all_allocated_item_objects() {
 	global.items_allocated = 0
 	global.allocated_item_object_array = [];
 }

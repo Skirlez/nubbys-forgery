@@ -4,7 +4,7 @@ global.empty_method = method(self, empty_function)
 init()
 expose_to_catspeak();
 
-global.item_id_to_index_map = ds_map_create();
+global.item_id_to_index_map = ds_map_create()
 global.index_to_item_id_map = ds_map_create();
 global.mod_id_to_mod_map = ds_map_create();
 global.mods = []
