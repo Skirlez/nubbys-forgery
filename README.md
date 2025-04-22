@@ -18,13 +18,14 @@ This structure is what allows the project to be open-sourced (and also makes it 
 
 Mods are written using [Catspeak](https://github.com/katsaii/catspeak-lang).
 
-To make a mod, clone the example project from TODO
+To make a mod, clone the example project from [here](https://github.com/Skirlez/nubbys-forgery-example-mod), and read the comments
 
 ## Status
-Below is a list of what I want the modloader to have vs. What is currently implemented.
+Below is a list of what I want the modloader to have with a tick with what's implemented.
 - [x] Items
 - [ ] Perks
 - [ ] Supervisors
+- [ ] Challenges
 - [ ] Special/Boss Rounds
 - [x] Sprite loading
 - [ ] Audio loading

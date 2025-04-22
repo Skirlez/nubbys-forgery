@@ -27,6 +27,8 @@ function create_mod(mod_folder_name) {
 		version : "",
 		credits : [],
 		target_modloader_version : 0,
+		entrypoint_path : "",
+		translations_path : "",
 	}
 	
 	var discompliance = get_struct_discompliance_with_contract(wod, mod_contract)
@@ -74,7 +76,6 @@ function create_mod(mod_folder_name) {
 	wod.translations = ds_map_create();
 	wod.sprites = ds_map_create();
 	wod.audio_streams = ds_map_create();
-	
 	
 	// TODO check invalid characters
 	return new result_ok(wod)
@@ -153,10 +154,13 @@ function get_code_file(path, wod = global.currently_executing_mod) {
 	return current_thing;
 	
 }
-
-function mod_get_path(path, wod = self) {
+function strip_initial_path_separator_character(path) {
 	if string_starts_with(path, "/") || string_starts_with(path, "\\")
-		path = string_delete(path, 1, 1)
+		path = string_delete(path, 1, 1)	
+	return path
+}
+function mod_get_path(path, wod = self) {
+	path = strip_initial_path_separator_character(path);
 	return $"{global.mods_directory}/{wod.folder_name}/{path}"	
 }
 
@@ -221,47 +225,7 @@ function read_all_mods() {
 		var wod = mod_result.value
 		ds_map_set(global.mod_id_to_mod_map, wod.mod_id, wod);
 		
-
-
-		/*
-		var mod_result = create_mod(code_files, mod_root_dir)	
-		buffer_delete(mod_buffer)
-		if mod_result.is_error() {
-			log_error(mod_result.error)
-			continue;
-		}
-		var wod = mod_result.value;
-		array_push(global.mods, wod);
-		ds_map_set(global.mod_id_to_mod_map, wod.mod_id, wod);
-		*/
-		
-		
-		/*
-		var sprites_dir = mod_dir + "sprites/";
-		var sprites_buffer = buffer_load(sprites_dir + "sprites.meow")
-		load_mod_sprites(sprites_buffer, sprites_dir, wod.mod_id)
-
-		var items_dir = mod_dir + "items/";
-		var items_buffer = buffer_load(items_dir + "items.meow")
-		load_mod_items(items_buffer, items_dir, wod.mod_id)
-		*/
-		
-		/*
-		var items = ds_map_values_to_array(wod.items)
-		for (var j = 0; j < array_length(items); j++) {
-			var item = items[j];
-			load_item(item)
-		}
-		*/
-		
-		// we're gonna assume there's only 1 en.csv for now
-		var trans_dir = $"{global.mods_directory}/{mod_folder_name}/trans/";
-		//var csv_files = get_all_files(trans_dir, "csv")
-		/*for (var i = 0; i < array_length(item_files); i++)*/ {
-			var file_path = trans_dir + "en.csv";
-			var translation = load_csv(file_path)
-			ds_map_add(wod.translations, "en", translation)
-		}
+		load_mod_translations(wod)
 		
 		var main = get_code_file("mod.meow", wod)
 		var main_globals = catspeak_globals(main)

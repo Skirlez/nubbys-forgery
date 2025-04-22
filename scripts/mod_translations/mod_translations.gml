@@ -1,3 +1,15 @@
+function load_mod_translations(wod) {
+	var translation_folder = strip_initial_path_separator_character(wod.translations_path);
+	// we're gonna assume there's only 1 .csv for now
+	var trans_dir = $"{global.mods_directory}/{wod.folder_name}/{translation_folder}";
+	//var csv_files = get_all_files(trans_dir, "csv")
+	/*for (var i = 0; i < array_length(item_files); i++)*/ {
+		var file_path = trans_dir + "/en.csv";
+		var translation = load_csv(file_path)
+		ds_map_add(wod.translations, "en", translation)
+	}	
+}
+
 function append_mod_translations() {
 	// Assuming English language for now
 	
