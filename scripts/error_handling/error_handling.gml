@@ -45,9 +45,3 @@ function error_with_id(error_id) constructor {
 	self.error_id = error_id;
 }
 
-function log(text) {
-	// TODO
-	show_debug_message(text)
-	show_message(text)
-	
-}

@@ -1,8 +1,9 @@
 if on_clean_up == noone
-	exit
+	exit;
+global.currently_executing_mod = wod;
 try {
 	catspeak_execute_ext(on_clean_up, self)
 }
 catch (e) {
-	log($"Functional object {name} errored on Clean Up: {e}")
+	log_error($"{error_string} Clean Up: {e.message}")
 }

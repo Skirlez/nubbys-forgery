@@ -1,19 +1,5 @@
-function load_mod_items(buffer, items_dir, mod_id) {
-	var ir = Catspeak.parse(buffer);
-	var main = Catspeak.compile(ir);
-	var globals = catspeak_globals(main);
-	globals.items_directory = items_dir;
-	globals.mod_id = mod_id;
-	try {
-		catspeak_execute(main);
-	}
-	catch (e) {
-		log($"Error while running items.meow file for mod {mod_id}: {e}")	
-	}
-}
-
 // For catspeak
-function register_mod_item(path, mod_id, item_id) {
+function register_mod_item(path, item_id) {
 	static item_contract = {
 		string_id : "",
 		display_name : "",
@@ -37,33 +23,32 @@ function register_mod_item(path, mod_id, item_id) {
 		on_step : global.empty_method,
 		on_trigger : global.empty_method,
 	}
-	if !ds_map_exists(global.mod_id_to_mod_map, mod_id)
-		throw $"Attempting to register item {item_id} to non-existent mod ID: {mod_id}"
-		
-	var item_buffer = buffer_load(path)
-	var ir = Catspeak.parse(item_buffer);
-	var main = Catspeak.compile(ir);
-	var globals = catspeak_globals(main);
-	globals.mod_id = mod_id
-	globals.string_id = item_id
+
+	var wod = global.currently_executing_mod;
+	var item_main = get_code_file(path, wod)
+	
+	var item = {}
+	nf_catspeak_set_globals(item_main, item)
+	item.wod = wod;
+	item.string_id = item_id
+	
 	try {
-		catspeak_execute(main);	
+		item_main();
 	}
 	catch(e) {
-		throw $"Error while running item definition file for item {item_id}! {e}"
+		throw $"Error while running item definition file for item {item_id}! {e.message}"
 	}
-	
-	var item = globals;
+
 	
 	var discompliance = get_struct_discompliance_with_contract(item, item_contract)
 	if array_length(discompliance.missing) > 0 || array_length(discompliance.mismatched_types) > 0 {
 		throw ($"Item {item_id} has bad variables!\n" 
 			+ generate_discompliance_error_text(item, item_contract, discompliance))
 	}
-	
-	
-	var wod = ds_map_find_value(global.mod_id_to_mod_map, mod_id)
+	log_info($"Item {item_id} registered to {wod.mod_id}")
 	ds_map_set(wod.items, item_id, item)
+	
+	
 	return item;
 }
 
@@ -75,7 +60,7 @@ function register_all_mod_items(directory, mod_id) {
 	var item_files = get_all_files(directory, "meow")
 	for (var j = 0; j < array_length(item_files); j++) {
 		var file_path = directory + item_files[j] + ".meow";
-		register_mod_item(file_path, mod_id, item_files[j])
+		register_mod_item(file_path, item_files[j])
 	}
 }
 
@@ -91,5 +76,5 @@ function get_item(string_id) {
 	return ds_map_find_value(wod.items, struct.resource);
 }
 function get_full_item_id(item) {
-	return $"{item.mod_id}:{item.string_id}"	
+	return $"{item.wod.mod_id}:{item.string_id}"	
 }

@@ -38,9 +38,10 @@ if (ItemLevel == 1)
 
 MyItemBacker = -1
 try {
+	global.currently_executing_mod = item.wod;
 	catspeak_execute_ext(item.on_create, self)
 }
 catch (e) {
-	log($"Item {item.string_id} errored on creation: {e}")
+	log_error($"Item {item.string_id} errored on creation: {e.message}")
 	// TODO disable item
 }

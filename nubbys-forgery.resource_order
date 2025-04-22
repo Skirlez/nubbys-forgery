@@ -25,6 +25,7 @@
     {"name":"generic_object_allocation","order":5,"path":"scripts/generic_object_allocation/generic_object_allocation.yy",},
     {"name":"scr_catspeak_lexer","order":2,"path":"scripts/scr_catspeak_lexer/scr_catspeak_lexer.yy",},
     {"name":"namespaced","order":10,"path":"scripts/namespaced/namespaced.yy",},
+    {"name":"logging","order":14,"path":"scripts/logging/logging.yy",},
     {"name":"error_handling","order":1,"path":"scripts/error_handling/error_handling.yy",},
     {"name":"file_io_util","order":8,"path":"scripts/file_io_util/file_io_util.yy",},
     {"name":"mod_items","order":11,"path":"scripts/mod_items/mod_items.yy",},

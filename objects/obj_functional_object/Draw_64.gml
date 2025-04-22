@@ -1,9 +1,9 @@
-if on_draw_gui == noone {
-	exit
-}
+if on_draw_gui == noone
+	exit;
+global.currently_executing_mod = wod;
 try {
 	catspeak_execute_ext(on_draw_gui, self)
 }
 catch (e) {
-	log($"Functional object {name} errored on Draw GUI: {e}")
+	log_error($"{error_string} Draw GUI: {e.message}")
 }

@@ -1,8 +1,9 @@
 if on_room_start == noone
-	exit
+	exit;
+global.currently_executing_mod = wod;
 try {
 	catspeak_execute_ext(on_room_start, self)
 }
 catch (e) {
-	log($"Functional object {name} errored on Room Start: {e}")
+	log_error($"{error_string} Room Start: {e.message}")
 }

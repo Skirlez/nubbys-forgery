@@ -43,6 +43,7 @@
     {"id":{"name":"generic_object_allocation","path":"scripts/generic_object_allocation/generic_object_allocation.yy",},},
     {"id":{"name":"scr_catspeak_lexer","path":"scripts/scr_catspeak_lexer/scr_catspeak_lexer.yy",},},
     {"id":{"name":"namespaced","path":"scripts/namespaced/namespaced.yy",},},
+    {"id":{"name":"logging","path":"scripts/logging/logging.yy",},},
     {"id":{"name":"the_script","path":"scripts/the_script/the_script.yy",},},
     {"id":{"name":"error_handling","path":"scripts/error_handling/error_handling.yy",},},
     {"id":{"name":"file_io_util","path":"scripts/file_io_util/file_io_util.yy",},},

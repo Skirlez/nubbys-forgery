@@ -3,9 +3,9 @@ function append_mod_translations() {
 	
 	// global.Translations is a ds_map, mapping keys to rows on the csv
 	// global.LocData is the base game csv ds_grid
-	
-	for (var i = 0; i < array_length(global.mods); i++) {
-		var wod = global.mods[i];
+	var mods = ds_map_values_to_array(global.mod_id_to_mod_map)
+	for (var i = 0; i < array_length(mods); i++) {
+		var wod = mods[i];
 		if !ds_map_exists(wod.translations, "en")
 			continue;
 		var mod_loc_data = ds_map_find_value(wod.translations, "en")

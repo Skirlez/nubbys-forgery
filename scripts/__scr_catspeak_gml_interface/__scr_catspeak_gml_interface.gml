@@ -395,8 +395,10 @@ function __catspeak_get_gml_interface() {
             try { db[$ "keyboard_check_direct"] = method(undefined, keyboard_check_direct) } catch (ce_) { skipped = true }
             try { db[$ "keyboard_get_numlock"] = method(undefined, keyboard_get_numlock) } catch (ce_) { skipped = true }
             try { db[$ "keyboard_set_numlock"] = method(undefined, keyboard_set_numlock) } catch (ce_) { skipped = true }
+			/* potentially very nasty.
             try { db[$ "keyboard_key_press"] = method(undefined, keyboard_key_press) } catch (ce_) { skipped = true }
             try { db[$ "keyboard_key_release"] = method(undefined, keyboard_key_release) } catch (ce_) { skipped = true }
+			*/
             try { db[$ "keyboard_clear"] = method(undefined, keyboard_clear) } catch (ce_) { skipped = true }
             try { db[$ "io_clear"] = method(undefined, io_clear) } catch (ce_) { skipped = true }
             try { db[$ "mouse_check_button"] = method(undefined, mouse_check_button) } catch (ce_) { skipped = true }
@@ -736,10 +738,12 @@ function __catspeak_get_gml_interface() {
             try { db[$ "get_integer_async"] = method(undefined, get_integer_async) } catch (ce_) { skipped = true }
             try { db[$ "get_string_async"] = method(undefined, get_string_async) } catch (ce_) { skipped = true }
             try { db[$ "get_login_async"] = method(undefined, get_login_async) } catch (ce_) { skipped = true }
+			/* potentially very nasty.
             try { db[$ "get_open_filename"] = method(undefined, get_open_filename) } catch (ce_) { skipped = true }
             try { db[$ "get_save_filename"] = method(undefined, get_save_filename) } catch (ce_) { skipped = true }
             try { db[$ "get_open_filename_ext"] = method(undefined, get_open_filename_ext) } catch (ce_) { skipped = true }
             try { db[$ "get_save_filename_ext"] = method(undefined, get_save_filename_ext) } catch (ce_) { skipped = true }
+			*/
             try { db[$ "show_error"] = method(undefined, show_error) } catch (ce_) { skipped = true }
             try { db[$ "highscore_clear"] = method(undefined, highscore_clear) } catch (ce_) { skipped = true }
             try { db[$ "highscore_add"] = method(undefined, highscore_add) } catch (ce_) { skipped = true }
