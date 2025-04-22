@@ -32,8 +32,7 @@ Below is a list of what I want the modloader to have with a tick with what's imp
 - [x] Translations
 
 ## Building
-TODO
-
+See the wiki: [Windows](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Windows)), [Linux](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Linux))
 ## License
 Catspeak is licensed under MIT license. Therefore, all of its code files are licensed under the MIT license.
 The rest of the code is licensed under the AGPLv3 license.
