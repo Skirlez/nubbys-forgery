@@ -2,7 +2,7 @@
 W.I.P Modloader for Nubby's Number Factory
 
 ## Why
-Every GameMaker has a data.win file which holds most of not all of its assets and code.
+Every GameMaker game has a data.win file which holds most of not all of its assets and code.
 
 Since it is a single binary file, it is rather simple to create mods for GameMaker games by editing it and distributing a differential patch (an .xdelta)
 However, since mods target this single binary file, you can't very easily apply two mods together; additionally, when the game updates, that file changes,
@@ -33,6 +33,7 @@ Below is a list of what I want the modloader to have with a tick with what's imp
 
 ## Building
 See the wiki: [Windows](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Windows)), [Linux](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Linux))
+
 ## License
 Catspeak is licensed under MIT license. Therefore, all of its code files are licensed under the MIT license.
 The rest of the code is licensed under the AGPLv3 license.

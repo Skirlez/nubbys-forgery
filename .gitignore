@@ -6,3 +6,6 @@ projectscripts/variables.sh
 projectscripts/variables.bat
 projectscripts/*.plist
 projectscripts/*.zip
+
+autodocs/*.gml
+autodocs/*.csv
