@@ -17,7 +17,7 @@ function create_mod(mod_folder_name) {
 	}
 	catch (e) {
 		return new result_error(new generic_error(
-			$"Error while parsing m-od.json in mod folder {mod_folder_name}: {e.message}"));
+			$"Error while parsing mod.json in mod folder {mod_folder_name}: {e.message}"));
 	}
 	
 	static mod_contract = {
@@ -29,6 +29,7 @@ function create_mod(mod_folder_name) {
 		target_modloader_version : 0,
 		entrypoint_path : "",
 		translations_path : "",
+		compile_all_code_on_load : 0 // gets parsed as number, despite being boolean.
 	}
 	
 	var discompliance = get_struct_discompliance_with_contract(wod, mod_contract)
@@ -46,10 +47,9 @@ function create_mod(mod_folder_name) {
 	// the mod requests
 	
 	//compile_all_files_in_path(wod)
-	
+	global.currently_executing_mod = wod;
 	try {
-		var main = get_code_file(wod.entrypoint_path, wod)
-		main()
+		var mod_globals = init_code_file_and_get_globals(wod.entrypoint_path, wod)
 	}
 	catch (e) {
 		return new result_error(new generic_error(e.message))
@@ -59,7 +59,6 @@ function create_mod(mod_folder_name) {
 		on_load : global.empty_method,
 		on_unload : global.empty_method,
 	}
-	var mod_globals = catspeak_globals(main);
 	var discompliance = get_struct_discompliance_with_contract(mod_globals, mod_globals_contract)
 	if array_length(discompliance.missing) > 0 || array_length(discompliance.mismatched_types) > 0 {
 		return new result_error(new generic_error(
@@ -102,11 +101,19 @@ function compile_all_files_in_path(path, map, wod) {
 
 
 // for catspeak use
-function execute_mod_code_file_from_path(path, wod = global.currently_executing_mod) {
+function execute_mod_code_file(path, wod = global.currently_executing_mod) {
 	var code = get_code_file(path, wod)
-	catspeak_execute_ext(code, wod)
+	code();
 }
-
+function get_code_file_globals(path, wod = global.currently_executing_mod) {
+	var code = get_code_file(path, wod)
+	return catspeak_globals(code)
+}
+function init_code_file_and_get_globals(path, wod = global.currently_executing_mod) {
+	var code = get_code_file(path, wod)
+	code();
+	return catspeak_globals(code)
+}
 // For gamemaker and catspeak use
 function get_code_file(path, wod = global.currently_executing_mod) {
 	var path_arr = string_split(path, "/", true)
@@ -159,7 +166,7 @@ function strip_initial_path_separator_character(path) {
 		path = string_delete(path, 1, 1)	
 	return path
 }
-function mod_get_path(path, wod = self) {
+function mod_get_path(path, wod = global.currently_executing_mod) {
 	path = strip_initial_path_separator_character(path);
 	return $"{global.mods_directory}/{wod.folder_name}/{path}"	
 }
@@ -234,7 +241,7 @@ function read_all_mods() {
 			main_globals.on_load();
 		}
 		catch (e) {
-			log_error($"Mod {wod.mod_id} errored on load: {e.message}")
+			log_error($"Mod {wod.mod_id} errored on load: {e.longMessage}")
 			// TODO what to do
 		}
 		
@@ -247,7 +254,7 @@ function read_all_mods() {
 // called from gml_Object_obj_ItemMGMT_Create_0
 function register_items() {
 	free_all_allocated_item_objects()
-	
+
 	ds_map_clear(global.item_id_to_index_map)
 	ds_map_clear(global.index_to_item_id_map)
 	var mods = ds_map_values_to_array(global.mod_id_to_mod_map)
@@ -258,9 +265,10 @@ function register_items() {
 			var item = items[j];
 			
 			var item_number_id = array_length(agi("obj_ItemMGMT").ItemID)
+
 			var obj = allocate_object_for_item(item)
 			object_set_sprite(obj, item.sprite)
-			log_info($"Item {item.string_id} gameplay registered from mod {item.wod.mod_id}")
+			log_info($"Item {item.string_id} gameplay registered from mod {item.mod_of_origin.mod_id}")
 			agi("scr_Init_Item")(item_number_id,
 				agi("scr_Text")(item.display_name),
 				obj,

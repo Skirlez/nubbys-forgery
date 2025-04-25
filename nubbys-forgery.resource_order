@@ -29,7 +29,6 @@
     {"name":"error_handling","order":1,"path":"scripts/error_handling/error_handling.yy",},
     {"name":"file_io_util","order":8,"path":"scripts/file_io_util/file_io_util.yy",},
     {"name":"mod_items","order":11,"path":"scripts/mod_items/mod_items.yy",},
-    {"name":"asset_registration","order":9,"path":"scripts/asset_registration/asset_registration.yy",},
     {"name":"scr_catspeak_parser","order":3,"path":"scripts/scr_catspeak_parser/scr_catspeak_parser.yy",},
     {"name":"empty_function","order":3,"path":"scripts/empty_function/empty_function.yy",},
     {"name":"scr_catspeak_environment","order":4,"path":"scripts/scr_catspeak_environment/scr_catspeak_environment.yy",},

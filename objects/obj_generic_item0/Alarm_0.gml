@@ -1,5 +1,5 @@
 try {
-	global.currently_executing_mod = item.wod;
+	global.currently_executing_mod = item.mod_of_origin;
 	catspeak_execute_ext(item.on_trigger, self)
 }
 catch (e) {

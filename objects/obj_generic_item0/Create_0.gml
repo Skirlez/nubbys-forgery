@@ -18,7 +18,7 @@ if instance_exists(agi("obj_SV4Manager")) {
     EvTypeAlt = obj_ItemMGMT.MutantTrig[MyItemID]
 }
 MyDesc = -1
-ItemLevel = 1
+//ItemLevel = 1
 // Keep in mind, after merging, this object does inherit from obj_ItemParent,
 // so this may seem like it does nothing in the IDE, this does do something after merging.
 alarm_set(10, 1)
@@ -31,14 +31,13 @@ ItemTemporary = 0
 DisableItem = 0
 RoundsAlive = 0
 
-// I don't know why the game does this seemingly for every item. I will not question it.
-ItemLevel = 0
+ItemLevel = item.level - 1 // This is actually set manually for items, seemingly. Automated here.
 if (ItemLevel == 1)
     alarm_set(6, 1)
 
 MyItemBacker = -1
 try {
-	global.currently_executing_mod = item.wod;
+	global.currently_executing_mod = item.mod_of_origin;
 	catspeak_execute_ext(item.on_create, self)
 }
 catch (e) {
