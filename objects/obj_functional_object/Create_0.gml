@@ -12,7 +12,7 @@ try {
 	catspeak_execute_ext(on_create, self)
 }
 catch (e) {
-	log_error($"{error_string} Create and will destroy itself: {e.message}")
+	log_error($"{error_string} Create and will destroy itself: {e}")
 	instance_destroy(id)
 }
 

@@ -136,6 +136,7 @@ foreach (string file in files) {
 }
 
 void applyPatches(string codeEntryName, string patches) {
+	UndertaleModLib.Compiler.CodeImportGroup importGroup = new(Data);
 	UndertaleCode entry = Data.Code.ByName(codeEntryName);
 	string targetPattern = @"// TARGET: ([^\n\r]+)";
 	string[] sections = Regex.Split(patches, targetPattern);
@@ -177,8 +178,11 @@ void applyPatches(string codeEntryName, string patches) {
 				finalResult = code;
 				break;
 		};
-		ImportGMLString(codeEntryName, finalResult);
+		
+		importGroup.QueueReplace(codeEntryName, finalResult);
+		importGroup.Import();
 	}
+	
 }
 
 
@@ -188,8 +192,10 @@ void applyPatches(string codeEntryName, string patches) {
 // Duplicating generic objects
 
 UndertaleGameObject obj_generic_item0 = Data.GameObjects.ByName("obj_generic_item0");
-for (int i = 1; i < 64; i++) {
+UndertaleGameObject obj_generic_perk0 = Data.GameObjects.ByName("obj_generic_perk0");
+for (int i = 1; i < 256; i++) {
 	cloneObject(obj_generic_item0, "obj_generic_item" + i.ToString());
+	cloneObject(obj_generic_perk0, "obj_generic_perk" + i.ToString());
 }
 
 

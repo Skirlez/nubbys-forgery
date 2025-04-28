@@ -39,3 +39,11 @@ function generate_discompliance_error_text(struct, contract_struct, discomplianc
 	string_delete(text, string_length(text), 1) // remove trailing newline
 	return text;
 }
+function initialize_missing(struct, optional_struct) {
+	var arr = struct_get_names(optional_struct)
+	for (var i = 0; i < array_length(arr); i++) {
+		var variable_name = arr[i];
+		if !variable_struct_exists(struct, variable_name)
+			struct[$ variable_name] = optional_struct[$ variable_name]
+	}
+}

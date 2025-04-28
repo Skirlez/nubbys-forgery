@@ -5,5 +5,5 @@ try {
 	catspeak_execute_ext(on_async_http, self)
 }
 catch (e) {
-	log_error($"{error_string} Async - HTTP: {e.message}")
+	log_error($"{error_string} Async - HTTP: {e}")
 }

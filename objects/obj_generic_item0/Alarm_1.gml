@@ -1,7 +1,9 @@
+if item.on_round_init == noone
+	return;
 try {
 	global.currently_executing_mod = item.mod_of_origin;
 	catspeak_execute_ext(item.on_round_init, self)
 }
 catch (e) {
-	log_error($"Item {item.string_id} errored on round initialization: {e.message}")
+	log_error($"Item {item.string_id} errored on round initialization: {e}")
 }

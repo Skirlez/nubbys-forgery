@@ -17,7 +17,7 @@ function create_mod(mod_folder_name) {
 	}
 	catch (e) {
 		return new result_error(new generic_error(
-			$"Error while parsing mod.json in mod folder {mod_folder_name}: {e.message}"));
+			$"Error while parsing mod.json in mod folder {mod_folder_name}: {e}"));
 	}
 	
 	static mod_contract = {
@@ -52,7 +52,7 @@ function create_mod(mod_folder_name) {
 		var mod_globals = init_code_file_and_get_globals(wod.entrypoint_path, wod)
 	}
 	catch (e) {
-		return new result_error(new generic_error(e.message))
+		return new result_error(new generic_error(e))
 	}
 
 	static mod_globals_contract = {
@@ -69,7 +69,7 @@ function create_mod(mod_folder_name) {
 	
 	
 	wod.items = ds_map_create();
-	//wod.perks = ds_map_create();
+	wod.perks = ds_map_create();
 	//wod.foods = ds_map_create();
 	wod.sprites = []
 	wod.translations = ds_map_create();
@@ -143,7 +143,7 @@ function get_code_file(path, wod = global.currently_executing_mod) {
 					var main = Catspeak.compile(ir);
 				}
 				catch (e) {
-					throw $"Error: mod {wod.mod_id} requested file {path} which errored on compilation: {e.message}"	
+					throw $"Error: mod {wod.mod_id} requested file {path} which errored on compilation: {e}"	
 				}
 				ds_map_add(current_thing, new_location, main)
 				buffer_delete(buffer)
@@ -184,9 +184,15 @@ function unload_mod(wod) {
 		main_globals.on_unload();
 	}
 	catch (e) {
-		log_error($"Mod {wod.mod_id} errored while unloading: {e.message}")
+		log_error($"Mod {wod.mod_id} errored while unloading: {e}")
 	}
-	ds_map_destroy(wod.items);
+	
+	// TODO: UNLOAD mod happenings
+	
+	
+	ds_map_destroy(wod.items)
+	ds_map_destroy(wod.perks)
+	
 	var translation_keys = ds_map_keys_to_array(wod.translations)
 	for (var j = 0; j < array_length(translation_keys); j++) {
 		ds_grid_destroy(ds_map_find_value(wod.translations, translation_keys[j]))	
@@ -217,6 +223,7 @@ function clear_all_mods() {
 	ds_map_clear(global.mod_id_to_mod_map)
 }
 
+
 // Reads all mods and returns a list of their structs
 function read_all_mods() {
 	clear_all_mods();
@@ -241,70 +248,12 @@ function read_all_mods() {
 			main_globals.on_load();
 		}
 		catch (e) {
-			log_error($"Mod {wod.mod_id} errored on load: {e.longMessage}")
+			log_error($"Mod {wod.mod_id} errored on load: {e}")
 			// TODO what to do
 		}
 		
 		
 	}
-}
-//
-
-
-// called from gml_Object_obj_ItemMGMT_Create_0
-function register_items() {
-	free_all_allocated_item_objects()
-
-	ds_map_clear(global.item_id_to_index_map)
-	ds_map_clear(global.index_to_item_id_map)
-	var mods = ds_map_values_to_array(global.mod_id_to_mod_map)
-	for (var i = 0; i < array_length(mods); i++) {
-		var wod = mods[i];
-		var items = ds_map_values_to_array(wod.items)
-		for (var j = 0; j < array_length(items); j++) {			
-			var item = items[j];
-			
-			var item_number_id = array_length(agi("obj_ItemMGMT").ItemID)
-
-			var obj = allocate_object_for_item(item)
-			object_set_sprite(obj, item.sprite)
-			log_info($"Item {item.string_id} gameplay registered from mod {item.mod_of_origin.mod_id}")
-			agi("scr_Init_Item")(item_number_id,
-				agi("scr_Text")(item.display_name),
-				obj,
-				item.level, 
-				item.type, 
-				item.tier, 
-				item.status,
-				item.effect_id, 
-				item.pool, 
-				item.offset_price, 
-				item.upgrade_item_id, 
-				item.trigger_condition, 
-				item.alt_trigger_condition,
-				agi("scr_Text")(item.description, "\n"))
-			agi("scr_Init_ItemExt")(item_number_id, 
-				item.odds_weight_early, item.odds_weight_mid, item.odds_weight_end)
-			
-			ds_map_set(global.item_id_to_index_map, get_full_item_id(item), item_number_id)
-			ds_map_set(global.index_to_item_id_map, item_number_id, get_full_item_id(item))
-		}
-	}
-	// we need to pass over this array after all items have been registered
-	// so we can then resolve the temporary upgrade item ID we put in and replace it with
-	// an index ID
-	var item_pair_arr = agi("obj_ItemMGMT").ItemPair
-	for (var i = 0; i < array_length(item_pair_arr); i++) {
-		if !is_string(item_pair_arr[i])
-			continue;
-		if !ds_map_exists(global.item_id_to_index_map, item_pair_arr[i]) {
-			log_error($"Item {ds_map_find_value(global.index_to_item_id_map, i)} has {item_pair_arr[i]} set"
-				+ " as its upgrade, but it does not exist!")
-			// TODO figure out what to do about the item in this case
-		}
-		item_pair_arr[i] = ds_map_find_value(global.item_id_to_index_map, item_pair_arr[i])
-	}
-	
 }
 
 function is_console_and_devmode_enabled() {
@@ -312,4 +261,9 @@ function is_console_and_devmode_enabled() {
 }
 function reroll_cheats_enabled() {
 	return true;	
+}
+
+function get_full_id(appropriate_struct) {
+	// TODO check if struct is item/perk
+	return $"{appropriate_struct.mod_of_origin.mod_id}:{appropriate_struct.string_id}"	
 }

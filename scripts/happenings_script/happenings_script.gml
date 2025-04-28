@@ -24,7 +24,6 @@ function happening_struct() constructor {
 			}
 		}
 	}
-	
 	function trigger(struct) {
 		for (var i = 0; i < array_length(callbacks); i++) {
 			callbacks[i](struct);
@@ -32,11 +31,27 @@ function happening_struct() constructor {
 	}
 }
 
-function register_happening(name) {
+function destroy_happening(name) {
+	var happening = new happening_struct();
+	ds_map_add(global.happenings, name, happening)
+	return happening;
+}
+function create_happening(name) {
+	if ds_map_exists(global.happenings, name) {
+		throw $"Error: {global.currently_executing_mod.mod_id} tried to create happening {name}, but it already exists!"
+	}
 	var happening = new happening_struct();
 	ds_map_add(global.happenings, name, happening)
 	return happening;
 }
 function get_happening(name) {
+	if !ds_map_exists(global.happenings, name) {
+		throw $"Error: {global.currently_executing_mod.mod_id} requested non-existent happening {name}!"	
+	}
 	return ds_map_find_value(global.happenings, name);
+}
+
+function create_modloader_happenings() {
+	create_happening("on_game_event")
+	create_happening("on_prepare_round")
 }

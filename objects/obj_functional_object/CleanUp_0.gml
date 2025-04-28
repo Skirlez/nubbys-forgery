@@ -5,5 +5,5 @@ try {
 	catspeak_execute_ext(on_clean_up, self)
 }
 catch (e) {
-	log_error($"{error_string} Clean Up: {e.message}")
+	log_error($"{error_string} Clean Up: {e}")
 }

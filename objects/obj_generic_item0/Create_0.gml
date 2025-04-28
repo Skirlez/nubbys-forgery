@@ -1,4 +1,5 @@
-// This object is cloned by the merger script a lot, but all of them run this exact script.
+// This object is cloned by the merger script a lot, but all of them run the same event code.
+
 // We need to determine at runtime what number object we are:
 allocated_id = real(string_digits(object_get_name(object_index)))
 
@@ -8,7 +9,7 @@ item = get_allocated_item(allocated_id)
 // This item struct determines how this object behaves.
 
 // Get the item's index ID
-MyItemID = ds_map_find_value(global.item_id_to_index_map, get_full_item_id(item))
+MyItemID = ds_map_find_value(global.item_id_to_index_map, get_full_id(item))
 
 // The following variables are set before create, so modders can override if they want to for some reason
 EvType = agi("obj_ItemMGMT").ItemTrig[MyItemID]
@@ -41,6 +42,6 @@ try {
 	catspeak_execute_ext(item.on_create, self)
 }
 catch (e) {
-	log_error($"Item {item.string_id} errored on creation: {e.message}")
+	log_error($"Item {item.string_id} errored on creation: {e}")
 	// TODO disable item
 }

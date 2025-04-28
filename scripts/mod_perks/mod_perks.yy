@@ -1,7 +1,7 @@
 {
   "resourceType": "GMScript",
   "resourceVersion": "1.0",
-  "name": "namespaced",
+  "name": "mod_perks",
   "isCompatibility": false,
   "isDnD": false,
   "parent": {

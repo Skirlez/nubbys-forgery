@@ -92,9 +92,6 @@ echo "-----------------------------------"
 echo "Merging into Nubby's Number Factory"
 echo "-----------------------------------"
 
-# https://github.com/UnderminersTeam/UndertaleModTool/pull/2063
-rm "$NNF_PATH/data.win"
-
-$UNDERTALEMODCLI_PATH load "$NNF_PATH/clean_data.win" --scripts "./merger.csx" --output "$NNF_PATH/data.win"
+"$UNDERTALEMODCLI_PATH" load "$NNF_PATH/clean_data.win" --scripts "./merger.csx" --output "$NNF_PATH/data.win"
 
 echo "All done!"

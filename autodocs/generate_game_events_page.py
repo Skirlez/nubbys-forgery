@@ -25,7 +25,7 @@ for line in lines:
 			value = value.replace("\t\t", "")
 			value = value.replace("[#ffd500]", "")
 
-			value = value.replace("[spr_ITArrow,0]", "->")
+			value = value.replace("[spr_ITArrow,0]", "→")
 		out += f"|{key}|{value}|\n"
 
 print(out)

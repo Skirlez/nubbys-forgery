@@ -3,5 +3,5 @@ try {
 	catspeak_execute_ext(item.on_trigger, self)
 }
 catch (e) {
-	log_error($"Item {item.string_id} errored on trigger: {e.message}")
+	log_error($"Item {item.string_id} errored on trigger: {e}")
 }
