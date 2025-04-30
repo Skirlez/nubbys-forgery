@@ -23,13 +23,14 @@ To make a mod, clone the example project from [here](https://github.com/Skirlez/
 ## Status
 Below is a list of what I want the modloader to have with a tick with what's implemented.
 - [x] Items
-- [ ] Perks
+- [x] Perks
 - [ ] Supervisors
 - [ ] Challenges
 - [ ] Special/Boss Rounds
 - [x] Sprite loading
 - [ ] Audio loading
 - [x] Translations
+- [ ] Code patching/modification using launcher
 
 ## Building
 See the wiki: [Windows](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Windows)), [Linux](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Linux))

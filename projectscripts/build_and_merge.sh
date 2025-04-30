@@ -19,14 +19,15 @@ fi
 
 if [ ! -x "$UNDERTALEMODCLI_PATH" ]; then
   echo ""
-  echo "UndertaleModCli not set as executable. Please run"
+  echo "UndertaleModCli is not set as executable. Please run"
   echo "chmod +x path/to/UndertaleModCli"
   read -p "Try running the command? (y/n): " answer
   if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
       chmod +x "$UNDERTALEMODCLI_PATH";
       if [ ! -x "$UNDERTALEMODCLI_PATH" ]; then
-         echo "Could not build NF:"
-         echo "Couldn't set UndertaleModCli as an executable. Do it yourself."
+        echo "Could not build NF:"
+        echo "Couldn't set UndertaleModCli as an executable. Do it yourself."
+        exit 1
       else
         echo "Success. Proceeding with script."
       fi
@@ -49,8 +50,8 @@ if [ ! -f "$NNF_PATH/clean_data.win" ]; then
 fi
 
 
-IGOR_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.4.0.113/bin/igor/linux/x64/Igor"
-RUNTIME_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.4.0.113"
+IGOR_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.8.2.152/bin/igor/linux/x64/Igor"
+RUNTIME_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.8.2.152"
 
 if [ -f "./data.win" ]; then
   echo "Removing old data.win"
@@ -94,4 +95,39 @@ echo "-----------------------------------"
 
 "$UNDERTALEMODCLI_PATH" load "$NNF_PATH/clean_data.win" --scripts "./merger.csx" --output "$NNF_PATH/data.win"
 
-echo "All done!"
+if [ -z "$GAME_RUN_COMMAND" ]; then
+  echo "All done!"
+  exit 0
+fi
+
+echo "Running game..."
+eval "$GAME_RUN_COMMAND"
+
+
+if [ -z "$SLIP_PATH" ]; then
+  echo "All done!"
+  exit 0
+fi
+
+
+if [ ! -x "$SLIP_PATH" ]; then
+  echo ""
+  echo "slip is not set as executable. Please run"
+  echo "chmod +x path/to/slip"
+  read -p "Try running the command? (y/n): " answer
+  if [ "$answer" = "y" ] || [ "$answer" = "Y" ]; then
+      chmod +x "$SLIP_PATH";
+      if [ ! -x "$SLIP_PATH" ]; then
+        echo "Could not launch slip:"
+        echo "Couldn't set slip as an executable. Do it yourself."
+        exit 0
+      else
+        echo "Success. Launching slip."
+      fi
+  else
+      exit 1
+  fi
+fi
+
+echo "Starting logger..."
+"$SLIP_PATH"

@@ -171,12 +171,9 @@ function mod_get_path(path, wod = global.currently_executing_mod) {
 	return $"{global.mods_directory}/{wod.folder_name}/{path}"	
 }
 
-function init() {
-	global.mods_directory = game_save_id + "mods";
-	catspeak_force_init()
-}
 
 function unload_mod(wod) {
+	log_info($"Unloading mod {wod.mod_id}")
 	var main = get_code_file("mod.meow", wod)
 	var main_globals = catspeak_globals(main)
 	global.currently_executing_mod = wod;
@@ -250,7 +247,10 @@ function read_all_mods() {
 		catch (e) {
 			log_error($"Mod {wod.mod_id} errored on load: {e}")
 			// TODO what to do
+			unload_mod(wod)
+			continue;
 		}
+		log_info($"Mod {wod.mod_id} successfully loaded")
 		
 		
 	}

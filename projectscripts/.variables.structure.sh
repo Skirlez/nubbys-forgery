@@ -22,5 +22,10 @@ GAMEMAKER_CACHE_PATH=""
 USER_DIRECTORY_PATH=""
 
 
+# Should also run the game?
+# If yes, set the variable below to "steam steam://rungameid/3191030/"
+GAME_RUN_COMMAND=""
 
-
+# Should run Simple Logging Program (slip) (https://github.com/Skirlez/slip) along with the game?
+# If yes, set the path to its executable here.
+SLIP_PATH=""
