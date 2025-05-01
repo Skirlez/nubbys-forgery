@@ -76,6 +76,9 @@ function create_mod(mod_folder_name) {
 	wod.sprites = ds_map_create();
 	wod.audio_streams = ds_map_create();
 	
+	wod.game_events = [];
+	wod.callback_records = [];
+	
 	// TODO check invalid characters
 	return new result_ok(wod)
 }
@@ -184,27 +187,40 @@ function unload_mod(wod) {
 		log_error($"Mod {wod.mod_id} errored while unloading: {e}")
 	}
 	
-	// TODO: UNLOAD mod happenings
-	
+	// Remove any Game Event callbacks this mod has
+	for (var i = 0; i < array_length(wod.callback_records); i++) {
+		var callback = wod.callback_records[i].callback;
+		var game_event_name = wod.callback_records[i].game_event_name;
+		
+		var callback_mod_structs = ds_map_find_value(global.modloader_game_events, game_event_name)
+		for (var j = 0; j < array_length(callback_mod_structs); j++) {
+			if (callback_mod_structs[j].callback == callback) {
+				array_delete(callback_mod_structs, j, 1)
+				break;	
+			}
+		}
+		if array_length(callback_mod_structs) == 0
+			ds_map_delete(global.modloader_game_events, game_event_name);
+	}
 	
 	ds_map_destroy(wod.items)
 	ds_map_destroy(wod.perks)
 	
 	var translation_keys = ds_map_keys_to_array(wod.translations)
-	for (var j = 0; j < array_length(translation_keys); j++) {
-		ds_grid_destroy(ds_map_find_value(wod.translations, translation_keys[j]))	
+	for (var i = 0; i < array_length(translation_keys); i++) {
+		ds_grid_destroy(ds_map_find_value(wod.translations, translation_keys[i]))	
 	}
 	ds_map_destroy(wod.translations)
 		
 	var sprite_keys = ds_map_keys_to_array(wod.sprites)
-	for (var j = 0; j < array_length(sprite_keys); j++) {
-		sprite_delete(ds_map_find_value(wod.sprites, sprite_keys[j]))	
+	for (var i = 0; i < array_length(sprite_keys); i++) {
+		sprite_delete(ds_map_find_value(wod.sprites, sprite_keys[i]))	
 	}
 	ds_map_destroy(wod.sprites)
 		
 	var audio_stream_keys = ds_map_keys_to_array(wod.audio_streams)
-	for (var j = 0; j < array_length(audio_stream_keys); j++) {
-		audio_destroy_stream(ds_map_find_value(wod.audio_streams, audio_stream_keys[j]))	
+	for (var i = 0; i < array_length(audio_stream_keys); i++) {
+		audio_destroy_stream(ds_map_find_value(wod.audio_streams, audio_stream_keys[i]))	
 	}
 	ds_map_destroy(wod.audio_streams)
 	ds_map_destroy(wod.code_files)
@@ -212,6 +228,7 @@ function unload_mod(wod) {
 
 
 function clear_all_mods() {
+	log_info("Clearing/Unloading all mods")
 	var mods = ds_map_values_to_array(global.mod_id_to_mod_map)
 	for (var i = 0; i < array_length(mods); i++) {
 		var wod = mods[i]
@@ -223,8 +240,6 @@ function clear_all_mods() {
 
 // Reads all mods and returns a list of their structs
 function read_all_mods() {
-	clear_all_mods();
-	
 	var folders = get_all_directories(global.mods_directory)
 	for (var i = 0; i < array_length(folders); i++) {
 		var mod_folder_name = folders[i];

@@ -19,7 +19,6 @@ log_info("****************\nModloader start\n****************")
 // used by functions called from catspeak
 global.currently_executing_mod = noone;
 
-create_modloader_happenings()
 read_all_mods()
 
 alarm[0] = 1

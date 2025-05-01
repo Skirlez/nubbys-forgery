@@ -22,7 +22,7 @@ function append_mod_translations() {
 			continue;
 		var mod_loc_data = ds_map_find_value(wod.translations, "en")
 		// TODO error handling if the mod csv isn't two values per row. Check here and log
-		// Also disallow semicolon in key name
+
 		var h = ds_grid_height(global.LocData)
 		ds_grid_resize(global.LocData, 
 			ds_grid_width(global.LocData), 

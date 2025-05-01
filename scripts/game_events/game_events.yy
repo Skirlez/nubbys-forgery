@@ -1,7 +1,7 @@
 {
   "resourceType": "GMScript",
   "resourceVersion": "1.0",
-  "name": "happenings_script",
+  "name": "game_events",
   "isCompatibility": false,
   "isDnD": false,
   "parent": {

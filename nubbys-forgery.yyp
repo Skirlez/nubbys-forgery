@@ -40,7 +40,6 @@
   "resources": [
     {"id":{"name":"obj_functional_object","path":"objects/obj_functional_object/obj_functional_object.yy",},},
     {"id":{"name":"scr_catspeak_presets","path":"scripts/scr_catspeak_presets/scr_catspeak_presets.yy",},},
-    {"id":{"name":"nf_catspeak_set_globals","path":"scripts/nf_catspeak_set_globals/nf_catspeak_set_globals.yy",},},
     {"id":{"name":"generic_object_allocation","path":"scripts/generic_object_allocation/generic_object_allocation.yy",},},
     {"id":{"name":"scr_catspeak_lexer","path":"scripts/scr_catspeak_lexer/scr_catspeak_lexer.yy",},},
     {"id":{"name":"identifier","path":"scripts/identifier/identifier.yy",},},
@@ -59,7 +58,7 @@
     {"id":{"name":"obj_generic_item0","path":"objects/obj_generic_item0/obj_generic_item0.yy",},},
     {"id":{"name":"obj_generic_perk0","path":"objects/obj_generic_perk0/obj_generic_perk0.yy",},},
     {"id":{"name":"mod_translations","path":"scripts/mod_translations/mod_translations.yy",},},
-    {"id":{"name":"happenings_script","path":"scripts/happenings_script/happenings_script.yy",},},
+    {"id":{"name":"game_events","path":"scripts/game_events/game_events.yy",},},
     {"id":{"name":"scr_catspeak_init","path":"scripts/scr_catspeak_init/scr_catspeak_init.yy",},},
     {"id":{"name":"obj_empty","path":"objects/obj_empty/obj_empty.yy",},},
     {"id":{"name":"scr_catspeak_ir","path":"scripts/scr_catspeak_ir/scr_catspeak_ir.yy",},},

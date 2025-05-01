@@ -3,13 +3,12 @@
 // TARGET: LINENUMBER
 // 7
 default:
-    scr_ItemMetaOrder(argument0)
-    scr_PerkMetaOrder(argument0)
-    scr_StatusMetaOrder(argument0)
+    scr_ItemMetaOrder(arg0)
+    scr_PerkMetaOrder(arg0)
+    scr_StatusMetaOrder(arg0)
     break;
 
-// trigger "on_game_event" happening
 
 // TARGET: LINENUMBER
-// 5
-get_happening("on_game_event").trigger({ event_name : arg0 })
+// 3
+on_game_event(arg0)

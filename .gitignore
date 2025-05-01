@@ -7,5 +7,5 @@ projectscripts/variables.bat
 projectscripts/*.plist
 projectscripts/*.zip
 
-autodocs/*.gml
-autodocs/*.csv
+projectscripts/meta/*.gml
+projectscripts/meta/*.csv

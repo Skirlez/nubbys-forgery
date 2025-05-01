@@ -3,8 +3,8 @@ function register_mod_item(item, item_id) {
 	static item_contract = {
 		display_name : "",
 		description : "",
-		trigger_condition : "",
-		alt_trigger_condition : "",
+		game_event : "",
+		alt_game_event : "",
 		sprite : agi("obj_empty"),
 		level : 0,
 		type : 0,
@@ -109,8 +109,8 @@ function register_items_for_gameplay() {
 				item.pool, 
 				item.offset_price, 
 				item.upgrade_item_id, 
-				item.trigger_condition, 
-				item.alt_trigger_condition,
+				item.game_event, 
+				item.alt_game_event,
 				agi("scr_Text")(item.description, "\n"))
 			agi("scr_Init_ItemExt")(item_number_id, 
 				item.odds_weight_early, item.odds_weight_mid, item.odds_weight_end)
