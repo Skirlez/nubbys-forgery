@@ -1,34 +1,23 @@
-global.items_allocated = 0
-global.allocated_item_object_array = [];
-function allocate_object_for_item(item) {
-	var num = global.items_allocated
-	global.items_allocated++;
-	
-	global.allocated_item_object_array[num] = item;
-	return agi($"obj_generic_item{num}");
+
+enum allocatable_objects {
+	item,
+	perk,
+	supervisor,
 }
-function get_allocated_item(num) {
-	return global.allocated_item_object_array[num]
+global.allocatable_object_names = ["item", "perk", "supervisor"]
+
+global.allocated_objects = ds_map_create();
+function allocate_object(type, resource) {
+	if !ds_map_exists(global.allocated_objects, type)
+		ds_map_add(global.allocated_objects, type, [])
+	var arr = ds_map_find_value(global.allocated_objects, type);
+	array_push(arr, resource);
+	return agi($"obj_generic_{global.allocatable_object_names[type]}{array_length(arr) - 1}");
 }
-function free_all_allocated_item_objects() {
-	global.items_allocated = 0
-	global.allocated_item_object_array = [];
+function free_all_allocated_objects(type) {
+	ds_map_set(global.allocated_objects, type, [])
+}
+function get_allocated_object(type, num) {
+	return ds_map_find_value(global.allocated_objects, type)[num]
 }
 
-
-global.perks_allocated = 0
-global.allocated_perk_object_array = [];
-function allocate_object_for_perk(perk) {
-	var num = global.perks_allocated
-	global.perks_allocated++;
-	
-	global.allocated_perk_object_array[num] = perk;
-	return agi($"obj_generic_perk{num}");
-}
-function get_allocated_perk(num) {
-	return global.allocated_perk_object_array[num]
-}
-function free_all_allocated_perk_objects() {
-	global.perks_allocated = 0
-	global.allocated_perk_object_array = [];
-}

@@ -193,9 +193,11 @@ void applyPatches(string codeEntryName, string patches) {
 
 UndertaleGameObject obj_generic_item0 = Data.GameObjects.ByName("obj_generic_item0");
 UndertaleGameObject obj_generic_perk0 = Data.GameObjects.ByName("obj_generic_perk0");
-for (int i = 1; i < 256; i++) {
+UndertaleGameObject obj_generic_supervisor0 = Data.GameObjects.ByName("obj_generic_supervisor0");
+for (int i = 1; i < 1024; i++) {
 	cloneObject(obj_generic_item0, "obj_generic_item" + i.ToString());
 	cloneObject(obj_generic_perk0, "obj_generic_perk" + i.ToString());
+	cloneObject(obj_generic_supervisor0, "obj_generic_supervisor" + i.ToString());
 }
 
 

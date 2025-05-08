@@ -46,7 +46,11 @@ function create_mod(mod_folder_name) {
 	// not running this line will cause it to lazily evaluate/compile every file
 	// the mod requests
 	
-	//compile_all_files_in_path(wod)
+	
+	if wod.compile_all_code_on_load {
+		log_info($"Compiling all files belonging to mod {wod.mod_id}")
+		compile_all_files_in_path_recursively("/", wod, wod.code_files)
+	}
 	global.currently_executing_mod = wod;
 	try {
 		var mod_globals = init_code_file_and_get_globals(wod.entrypoint_path, wod)
@@ -70,6 +74,7 @@ function create_mod(mod_folder_name) {
 	
 	wod.items = ds_map_create();
 	wod.perks = ds_map_create();
+	wod.supervisors = ds_map_create();
 	//wod.foods = ds_map_create();
 	wod.sprites = []
 	wod.translations = ds_map_create();
@@ -84,7 +89,7 @@ function create_mod(mod_folder_name) {
 }
 
 
-function compile_all_files_in_path(path, map, wod) {
+function compile_all_files_in_path_recursively(path, map, wod) {
 	var files = get_all_files(path, ".meow")
 	for (var i = 0; i < array_length(files); i++) {
 		var buffer = buffer_load($"{path}{files[i]}.meow")
@@ -98,7 +103,7 @@ function compile_all_files_in_path(path, map, wod) {
 		var folder_name = folders[i]
 		var folder_map = ds_map_create();
 		ds_map_add_map(map, folders[i], folder_map)
-		compile_all_files_in_path($"{path}/{folder_name}", folder_map, wod)
+		compile_all_files_in_path_recursively($"{path}/{folder_name}", folder_map, wod)
 	}
 }
 
@@ -118,6 +123,13 @@ function init_code_file_and_get_globals(path, wod = global.currently_executing_m
 	return catspeak_globals(code)
 }
 // For gamemaker and catspeak use
+
+/*
+TODO:
+I cannot remember why I implemented code_files with nested maps.
+I don't think it needs nested maps. Could just have code_files be a map of path strings to code files.
+Probably should rewrite this to do that.
+*/
 function get_code_file(path, wod = global.currently_executing_mod) {
 	var path_arr = string_split(path, "/", true)
 	var current_thing = wod.code_files
@@ -171,6 +183,9 @@ function strip_initial_path_separator_character(path) {
 }
 function mod_get_path(path, wod = global.currently_executing_mod) {
 	path = strip_initial_path_separator_character(path);
+	
+	// TODO run check for if this is a real directory or file and warn if it isn't
+	
 	return $"{global.mods_directory}/{wod.folder_name}/{path}"	
 }
 
@@ -224,6 +239,8 @@ function unload_mod(wod) {
 	}
 	ds_map_destroy(wod.audio_streams)
 	ds_map_destroy(wod.code_files)
+	
+	ds_map_delete(global.mod_id_to_mod_map, wod.mod_id);
 }
 
 
@@ -271,14 +288,15 @@ function read_all_mods() {
 	}
 }
 
+
 function is_console_and_devmode_enabled() {
 	return true;	
 }
 function reroll_cheats_enabled() {
-	return true;	
+	return false;	
 }
 
 function get_full_id(appropriate_struct) {
-	// TODO check if struct is item/perk
+	// TODO check if struct is item/perk/supervisor
 	return $"{appropriate_struct.mod_of_origin.mod_id}:{appropriate_struct.string_id}"	
 }

@@ -5,7 +5,7 @@ allocated_id = real(string_digits(object_get_name(object_index)))
 
 // These objects are allocated to different items.
 // Get the item this object is allocated to
-item = get_allocated_item(allocated_id)
+item = get_allocated_object(allocatable_objects.item, allocated_id)
 // This item struct determines how this object behaves.
 
 // Get the item's index ID

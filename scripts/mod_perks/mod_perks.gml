@@ -29,7 +29,7 @@ function register_mod_perk(perk, perk_id) {
 
 // called from gml_Object_obj_PerkMGMT_Create_0
 function register_perks_for_gameplay() {
-	free_all_allocated_perk_objects()
+	free_all_allocated_objects(allocatable_objects.perk)
 
 	ds_map_clear(global.perk_id_to_index_map)
 	ds_map_clear(global.index_to_perk_id_map)
@@ -42,7 +42,7 @@ function register_perks_for_gameplay() {
 			
 			var perk_number_id = array_length(agi("obj_PerkMGMT").PerkID)
 
-			var obj = allocate_object_for_perk(perk)
+			var obj = allocate_object(allocatable_objects.perk, perk)
 			object_set_sprite(obj, perk.sprite)
 			log_info($"Perk {perk.string_id} gameplay registered from mod {perk.mod_of_origin.mod_id}")
 			
@@ -57,7 +57,7 @@ function register_perks_for_gameplay() {
 				perk.additional_info_type,
 				agi("scr_Text")(perk.description, "\n"))
 			
-			ds_map_set(global.perk_id_to_index_map, get_full_id(perk), perk_number_id)
+			ds_map_set(global.perk_id_to_index_map, perk, perk_number_id)
 			ds_map_set(global.index_to_perk_id_map, perk_number_id, get_full_id(perk))
 		}
 	}

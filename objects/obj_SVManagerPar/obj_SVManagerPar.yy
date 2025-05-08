@@ -1,7 +1,7 @@
 {
   "resourceType": "GMObject",
   "resourceVersion": "1.0",
-  "name": "obj_ItemParent",
+  "name": "obj_SVManagerPar",
   "eventList": [],
   "managed": true,
   "overriddenProperties": [],

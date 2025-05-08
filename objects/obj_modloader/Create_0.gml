@@ -11,6 +11,9 @@ global.index_to_item_id_map = ds_map_create();
 global.perk_id_to_index_map = ds_map_create()
 global.index_to_perk_id_map = ds_map_create()
 
+global.supervisor_to_index_map = ds_map_create()
+global.index_to_supervisor_map = ds_map_create()
+
 global.mod_id_to_mod_map = ds_map_create();
 
 global.logging_socket = network_create_socket(network_socket_udp)

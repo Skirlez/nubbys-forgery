@@ -5,11 +5,11 @@ allocated_id = real(string_digits(object_get_name(object_index)))
 
 // These objects are allocated to different items.
 // Get the perk this object is allocated to
-perk = get_allocated_perk(allocated_id)
+perk = get_allocated_object(allocatable_objects.perk, allocated_id)
 // This perk struct determines how this object behaves.
 
 // Get the perk's index ID
-MyPerkID = ds_map_find_value(global.perk_id_to_index_map, get_full_id(perk))
+MyPerkID = ds_map_find_value(global.perk_to_index_map, get_full_id(perk))
 
 EvType = agi("obj_PerkMGMT").PerkTrigger[MyPerkID]
 MyDesc = agi("obj_PerkMGMT").PerkDesc[MyPerkID]

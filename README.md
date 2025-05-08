@@ -2,14 +2,21 @@
 W.I.P Modloader for Nubby's Number Factory
 
 ## Why
-Every GameMaker game has a data.win file which holds most of not all of its assets and code.
+Every GameMaker game has a data.win file, which holds most if not all of its assets and code.
 
-Since it is a single binary file, it is rather simple to create mods for GameMaker games by editing it and distributing a differential patch (an .xdelta)
+Since it is a single binary file, it is rather simple to create mods for GameMaker games by modifying it and distributing a differential patch (an .xdelta).
 However, since mods target this single binary file, you can't very easily apply two mods together; additionally, when the game updates, that file changes,
 so mods have to update with the game.
 
 The goal of this project is to solve both of these problems. You can think of the modloader as a regular mod that can load additional sub-mods, that are in a different format.
-Since everything is done at runtime, there's no issue running several mods together. And if the game updates, depending on the nature of the update, the modloader could make sure old mods still work.
+Since this format doesn't target a single binary file, there's no issue having multiple mods running together. And when the game updates (depending on the nature of the update), the modloader could make sure old mods still work.
+
+There's two other goals:
+
+- Making modding slightly more accessible by writing an API to help you extend base game systems (e.g. making it easier to add new items, perks, and whatnot)
+
+- Making sure the modloader doesn't limit what you can do. And in the end, the goal is that you'll be able to do any modification to the game you could do normally
+by modifying the data.win directly.
 
 ## How it works
 This repository contains a GameMaker project. This project is built, and then merged into Nubby's Number Factory, using an UndertaleModTool script, 
@@ -18,13 +25,19 @@ This structure is what allows the project to be open-sourced (and also makes it 
 
 Mods are written using [Catspeak](https://github.com/katsaii/catspeak-lang).
 
-To make a mod, clone the example project from [here](https://github.com/Skirlez/nubbys-forgery-example-mod), and read the comments
+## Making your own mod
+I would advise against it as of now, as the mod structure is still changing. Nevertheless, an up-to-date example mod, with various trinkets I have implemented, is
+available at https://github.com/Skirlez/nubbys-forgery-example-mod. It has plenty of comments to help you.
+
+The example mod is released under a public domain license, so you can copy or fork it and make whatever changes you want, without attribution.
+
+Additionally: See the [wiki](https://github.com/Skirlez/nubbys-forgery/wiki)! 
 
 ## Status
 Below is a list of what I want the modloader to have with a tick with what's implemented.
 - [x] Items
 - [x] Perks
-- [ ] Supervisors
+- [x] Supervisors
 - [ ] Challenges
 - [ ] Special/Boss Rounds
 - [x] Sprite loading

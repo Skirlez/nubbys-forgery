@@ -81,7 +81,7 @@ function remove_file_extension(name) {
 
 // called from gml_Object_obj_ItemMGMT_Create_0
 function register_items_for_gameplay() {
-	free_all_allocated_item_objects()
+	free_all_allocated_objects(allocatable_objects.item)
 	ds_map_clear(global.item_id_to_index_map)
 	ds_map_clear(global.index_to_item_id_map)
 	var mods = ds_map_values_to_array(global.mod_id_to_mod_map)
@@ -93,8 +93,7 @@ function register_items_for_gameplay() {
 			
 			var item_number_id = array_length(agi("obj_ItemMGMT").ItemID)
 
-			var obj = allocate_object_for_item(item)
-			
+			var obj = allocate_object(allocatable_objects.item, item)
 			
 			object_set_sprite(obj, item.sprite)
 			log_info($"Item {item.string_id} gameplay registered from mod {item.mod_of_origin.mod_id}")
