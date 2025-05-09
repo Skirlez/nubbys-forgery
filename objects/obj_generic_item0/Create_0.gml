@@ -16,7 +16,7 @@ EvType = agi("obj_ItemMGMT").ItemTrig[MyItemID]
 EvTypeAlt = "Empty"
 EvTypeExt = "Empty"
 if instance_exists(agi("obj_SV4Manager")) {
-    EvTypeAlt = obj_ItemMGMT.MutantTrig[MyItemID]
+    EvTypeAlt = agi("obj_ItemMGMT").MutantTrig[MyItemID]
 }
 MyDesc = -1
 //ItemLevel = 1

@@ -9,7 +9,9 @@ perk = get_allocated_object(allocatable_objects.perk, allocated_id)
 // This perk struct determines how this object behaves.
 
 // Get the perk's index ID
-MyPerkID = ds_map_find_value(global.perk_to_index_map, get_full_id(perk))
+MyPerkID = ds_map_find_value(global.perk_id_to_index_map, get_full_id(perk))
+
+show_message(string(MyPerkID))
 
 EvType = agi("obj_PerkMGMT").PerkTrigger[MyPerkID]
 MyDesc = agi("obj_PerkMGMT").PerkDesc[MyPerkID]

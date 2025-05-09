@@ -13,7 +13,7 @@ function register_mod_item(item, item_id) {
 		effect_id : "",
 		pool : 0,
 		offset_price : 0,
-		upgrade_item_id : "",
+		pair_id : "",
 		odds_weight_early : 0,
 		odds_weight_mid : 0,
 		odds_weight_end : 0,
@@ -107,7 +107,7 @@ function register_items_for_gameplay() {
 				item.effect_id, 
 				item.pool, 
 				item.offset_price, 
-				item.upgrade_item_id, 
+				item.pair_id, 
 				item.game_event, 
 				item.alt_game_event,
 				agi("scr_Text")(item.description, "\n"))
@@ -127,7 +127,7 @@ function register_items_for_gameplay() {
 			continue;
 		if !ds_map_exists(global.item_id_to_index_map, item_pair_arr[i]) {
 			log_error($"Item {ds_map_find_value(global.index_to_item_id_map, i)} has {item_pair_arr[i]} set"
-				+ " as its upgrade, but it does not exist!")
+				+ " as its pair, but it does not exist!")
 			// TODO figure out what to do about the item in this case
 		}
 		item_pair_arr[i] = ds_map_find_value(global.item_id_to_index_map, item_pair_arr[i])

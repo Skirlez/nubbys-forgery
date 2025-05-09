@@ -57,7 +57,7 @@ function register_perks_for_gameplay() {
 				perk.additional_info_type,
 				agi("scr_Text")(perk.description, "\n"))
 			
-			ds_map_set(global.perk_id_to_index_map, perk, perk_number_id)
+			ds_map_set(global.perk_id_to_index_map, get_full_id(perk), perk_number_id)
 			ds_map_set(global.index_to_perk_id_map, perk_number_id, get_full_id(perk))
 		}
 	}
