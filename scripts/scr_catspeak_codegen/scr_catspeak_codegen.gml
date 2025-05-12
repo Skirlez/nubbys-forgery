@@ -92,6 +92,8 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
     /// @ignore
     self.functions = ir.functions;
     /// @ignore
+    self.filepath = ir[$ "filepath"]; // like this for compatibility with old versions
+    /// @ignore
     self.sharedData = {
         globals : { },
         self_ : undefined,
@@ -221,7 +223,8 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
             locals : array_create(func.localCount),
             argCount : func.argCount,
             args : array_create(func.argCount),
-            currentArgCount: 0,
+            currentArgCount : 0,
+            filepath : filepath,
         };
         ctx.program = __compileTerm(ctx, func.root);
         if (__catspeak_term_is_pure(func.root.type)) {
@@ -395,16 +398,25 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
                 "lazy", undefined,
                 "localRef", undefined
             );
-            __catspeak_check_arg_struct("term.localRef", term.localRef,
-                "idx", is_numeric
-            );
-        }        
-        return method({
-            eager : __compileTerm(ctx, term.eager),
-            lazy : __compileTerm(ctx, term.lazy),
-            locals : ctx.locals,
-            idx : term.localRef.idx,
-        }, __catspeak_expr_catch__);
+        }
+        if (term.localRef == undefined) {
+            return method({
+                eager : __compileTerm(ctx, term.eager),
+                lazy : __compileTerm(ctx, term.lazy),
+            }, __catspeak_expr_catch_simple__);
+        } else {
+            if (CATSPEAK_DEBUG_MODE) {
+                __catspeak_check_arg_struct("term.localRef", term.localRef,
+                    "idx", is_numeric
+                );
+            }
+            return method({
+                eager : __compileTerm(ctx, term.eager),
+                lazy : __compileTerm(ctx, term.lazy),
+                locals : ctx.locals,
+                idx : term.localRef.idx,
+            }, __catspeak_expr_catch__);
+        }
     };
 
     /// @ignore
@@ -484,6 +496,7 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
         return method({
             scope : __compileTerm(ctx, term.scope),
             body : __compileTerm(ctx, term.body),
+            dbgError : __dbgTerm(term.scope, "is not valid in 'with' contexts")
         }, __catspeak_expr_loop_with__);
     };
 
@@ -798,7 +811,7 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
             if (__exists(name)) {
                 // cannot assign to interface values
                 __catspeak_error(
-                    __catspeak_location_show(target.dbg),
+                    __catspeak_location_show(target.dbg, filepath),
                     " -- invalid assignment target, ",
                     "cannot assign to built-in function or constant"
                 );
@@ -817,7 +830,7 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
                 );
             }
             __catspeak_error(
-                __catspeak_location_show(target.dbg),
+                __catspeak_location_show(target.dbg, filepath),
                 " -- invalid assignment target, ",
                 "must be an identifier or accessor expression"
             );
@@ -1083,7 +1096,7 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
             );
         }
         var terminalName = __catspeak_term_get_terminal(term);
-        return "runtime error " + __catspeak_location_show_ext(term.dbg,
+        return "runtime error " + __catspeak_location_show_ext(term.dbg, filepath,
             __catspeak_is_nullish(terminalName)
                     ? "value"
                     : "variable '" + terminalName + "'",
@@ -1160,6 +1173,17 @@ function __catspeak_function__() {
         }
     }
     if (doThrowValue) {
+        if (filepath != undefined && is_struct(throwValue)) {
+            var catspeakErr = "CATSPEAK ERROR " + __catspeak_location_show(undefined, filepath);
+            if (variable_struct_exists(throwValue, "message")) {
+                // add where the error occurred (really bad implementation, might be good enough for now)
+                throwValue.message = catspeakErr + ": " + throwValue.message;
+            }
+            if (variable_struct_exists(throwValue, "longMessage")) {
+                // add where the error occurred (really bad implementation, might be good enough for now)
+                throwValue.longMessage += "\n-----\n" + catspeakErr + "\n";
+            }
+        }
         throw throwValue;
     }
     return value;
@@ -1285,6 +1309,18 @@ function __catspeak_expr_catch__() {
 
 /// @ignore
 /// @return {Any}
+function __catspeak_expr_catch_simple__() {
+    var result;
+    try {
+        result = eager();
+    } catch (exValue) {
+        result = lazy();
+    }
+    return result;
+}
+
+/// @ignore
+/// @return {Any}
 function __catspeak_expr_and__() {
     return eager() && lazy();
 }
@@ -1395,12 +1431,20 @@ function __catspeak_expr_loop_general__() {
 /// @ignore
 /// @return {Any}
 function __catspeak_expr_loop_with__() {
+    var scope_ = scope();
+    if (scope_ == noone) {
+        return undefined;
+    }
     var body_ = body;
     var throwValue = undefined;
     var doThrowValue = false;
     var returnValue = undefined;
     var doReturnValue = false;
-    with (scope()) {
+    if (!__catspeak_is_withable(scope_)) {
+        __catspeak_error(dbgError, ": ", scope_);
+        return undefined;
+    }
+    with (scope_) {
         // the finally block doesn't execute sometimes if there's a `break`,
         // `throw`, or `continue` in the try/catch blocks
         __CATSPEAK_BEGIN_SELF = self;

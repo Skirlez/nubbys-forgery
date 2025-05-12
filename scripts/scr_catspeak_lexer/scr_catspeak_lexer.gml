@@ -3,6 +3,7 @@
 //! discrete clusters of characters called [tokens](https://en.wikipedia.org/wiki/Lexical_analysis#Lexical_token_and_lexical_tokenization).
 
 //# feather use syntax-errors
+
 /// A token in Catspeak is a series of characters with meaning, usually
 /// separated by whitespace. These meanings are represented by unique
 /// elements of the `CatspeakToken` enum.

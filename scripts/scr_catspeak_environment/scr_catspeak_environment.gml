@@ -655,15 +655,18 @@ function CatspeakEnvironment() constructor {
     ///   The length of the buffer input. Any characters beyond this limit
     ///   will be treated as the end of the file. Defaults to `infinity`.
     ///
+    /// @param {String} [filepath]
+    ///   Associates this Catspeak source code with a filename.
+    ///
     /// @return {Struct}
-    static parse = function (buff, offset=undefined, size=undefined) {
+    static parse = function (buff, offset=undefined, size=undefined, filepath=undefined) {
         if (CATSPEAK_DEBUG_MODE) {
             __catspeak_check_arg("buff", buff, buffer_exists);
             __catspeak_check_arg_optional("offset", offset, is_numeric);
             __catspeak_check_arg_optional("size", size, is_numeric);
         }
         var lexer = tokenise(buff, offset, size);
-        var builder = new CatspeakIRBuilder();
+        var builder = new CatspeakIRBuilder(filepath);
         var parser = new parserType(lexer, builder);
         var moreToParse;
         do {
@@ -677,13 +680,16 @@ function CatspeakEnvironment() constructor {
     /// @param {String} src
     ///   The string containing Catspeak source code to parse.
     ///
+    /// @param {String} [filepath]
+    ///   Associates this Catspeak source code with a filename.
+    ///
     /// @return {Struct}
-    static parseString = function (src) {
+    static parseString = function (src, filepath=undefined) {
         if (CATSPEAK_DEBUG_MODE) {
             __catspeak_check_arg("src", src, is_string);
         }
         var buff = __catspeak_create_buffer_from_string(src);
-        var result = parse(buff);
+        var result = parse(buff, undefined, undefined, filepath);
         buffer_delete(buff);
         return result;
     };
@@ -1130,7 +1136,6 @@ function catspeak_method(self_, callee) {
 
 /// Returns the 'self' of the current method, either by returning the correct Catspeak scope
 /// or the exposed GML method scope (if any)
-/// 
 ///
 /// @remark
 ///   Preferred over 'method_get_self', otherwise you risk breaking your compiled
@@ -1150,13 +1155,11 @@ function catspeak_get_self(callee) {
         var self_ = method_get_self(callee);
         return self_[$ "self_"]; 
     }
-    
     return method_get_self(callee);
 }
 
 /// Returns the 'index' of the current method, either by returning the compiled 
 /// Catspeak function or the exposed GML function as a method bound to `undefined`
-/// 
 ///
 /// @remark
 ///   Preferred over 'method_get_index', otherwise you risk breaking your compiled
@@ -1172,7 +1175,6 @@ function catspeak_get_index(callee) {
         var self_ = method_get_self(callee);
         return self_[$ "callee"] ?? callee;
     }
-    
     return method(undefined, callee);
 }
 

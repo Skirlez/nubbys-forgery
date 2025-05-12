@@ -45,8 +45,6 @@ function create_mod(mod_folder_name) {
 	
 	// not running this line will cause it to lazily evaluate/compile every file
 	// the mod requests
-	
-	
 	if wod.compile_all_code_on_load {
 		log_info($"Compiling all files belonging to mod {wod.mod_id}")
 		compile_all_files_in_path_recursively("/", wod, wod.code_files)
@@ -220,7 +218,7 @@ function unload_mod(wod) {
 	
 	ds_map_destroy(wod.items)
 	ds_map_destroy(wod.perks)
-	
+	ds_map_destroy(wod.supervisors)
 	var translation_keys = ds_map_keys_to_array(wod.translations)
 	for (var i = 0; i < array_length(translation_keys); i++) {
 		ds_grid_destroy(ds_map_find_value(wod.translations, translation_keys[i]))	
