@@ -30,6 +30,8 @@ if not exist "%NNF_PATH%\clean_data.win" (
 	if /i "!USER_ANSWER!"=="Y" (
 		echo I believe you... Copying clean_data.win
 		copy "%NNF_PATH%\data.win" "%NNF_PATH%\clean_data.win"
+	) else (
+		exit
 	)
 )
 
