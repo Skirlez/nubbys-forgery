@@ -39,6 +39,9 @@
   },
   "resources": [
     {"id":{"name":"obj_functional_object","path":"objects/obj_functional_object/obj_functional_object.yy",},},
+    {"id":{"name":"bimap_functions","path":"scripts/bimap_functions/bimap_functions.yy",},},
+    {"id":{"name":"api","path":"scripts/api/api.yy",},},
+    {"id":{"name":"indexing","path":"scripts/indexing/indexing.yy",},},
     {"id":{"name":"generic_object_allocation","path":"scripts/generic_object_allocation/generic_object_allocation.yy",},},
     {"id":{"name":"obj_SVManagerPar","path":"objects/obj_SVManagerPar/obj_SVManagerPar.yy",},},
     {"id":{"name":"mod_supervisors","path":"scripts/mod_supervisors/mod_supervisors.yy",},},

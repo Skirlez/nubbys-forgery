@@ -1,7 +1,13 @@
 function log_error(text) {
+	text = $"Error: {text}"
 	show_debug_message(text)
 	log_udp(text)
 	show_message(text)
+}
+function log_warn(text) {
+	text = $"Warning: {text}"
+	show_debug_message(text)
+	log_udp(text)
 }
 function log_info(text) {
 	show_debug_message(text)
@@ -15,14 +21,14 @@ function log_udp(text) {
 	buffer_delete(buffer)
 }
 // For catspeak
-function log() {
+function mod_log() {
 	var text;
 	if argument_count == 0
 		text = ""
 	else
-		text = argument0
+		text = string(argument0)
 	for (var i = 1; i < argument_count; i++) {
-		text += " " + argument[i];
+		text += " " + string(argument[i]);
 	}
 	log_info($"[{global.currently_executing_mod.mod_id}] {text}")
 }

@@ -1,7 +1,7 @@
+global.currently_executing_mod = mod_of_origin;
 try {
-	global.currently_executing_mod = item.mod_of_origin;
 	catspeak_execute_ext(item.on_trigger, self)
 }
 catch (e) {
-	log_error($"Item {item.string_id} errored on trigger: {e}")
+	log_error($"Item {string_id} errored on trigger: {pretty_error(e)}")
 }

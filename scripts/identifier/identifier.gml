@@ -1,11 +1,14 @@
-function identifier(mod_id, string_id) {
+function mod_identifier(mod_id, string_id) {
 	return $"{mod_id}:{string_id}"
 }
-function is_id_valid(string_id) {
+function mod_is_id_valid(string_id) {
 	return true; // TODO
 }
-
-function split_id(string_id) {
-	var split = string_split(string_id, ":", true, 1)
-	return { namespace : split[0], resource : split[1] }
+function mod_is_id_component_valid(str) {
+	// TODO
+	return string_count(":", str) == 0
 }
+function mod_identifier_get_namespace(_id) {
+	return string_split(_id, ":")[0]
+}
+

@@ -28,12 +28,12 @@ function append_mod_translations() {
 			ds_grid_width(global.LocData), 
 			h + ds_grid_height(mod_loc_data))
 			
-		for (var i = 0; i < ds_grid_height(mod_loc_data); i++) {
-			var key = ds_grid_get(mod_loc_data, 0, i);
-			var line = h + i;
+		for (var j = 0; j < ds_grid_height(mod_loc_data); j++) {
+			var key = ds_grid_get(mod_loc_data, 0, j);
+			var line = h + j;
 			ds_map_set(global.Translations, key, line)
 			ds_grid_set(global.LocData, 0, line, key)
-			ds_grid_set(global.LocData, 1, line, ds_grid_get(mod_loc_data, 1, i))
+			ds_grid_set(global.LocData, 1, line, ds_grid_get(mod_loc_data, 1, j))
 		}
 		
 			

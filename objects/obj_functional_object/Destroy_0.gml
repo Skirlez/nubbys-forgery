@@ -5,5 +5,5 @@ try {
 	catspeak_execute_ext(on_destroy, self)
 }
 catch (e) {
-	log_error($"{error_string} Destroy: {e}")
+	log_error($"{error_string} Destroy: {pretty_error(e)}")
 }

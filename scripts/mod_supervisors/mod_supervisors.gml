@@ -1,5 +1,19 @@
+global.supervisors = bimap_create();
+
+
 // For catspeak
-function register_mod_supervisor(supervisor, supervisor_id) {
+function mod_register_supervisor(supervisor, supervisor_id, wod = global.currently_executing_mod) {
+	if !mod_is_id_component_valid(supervisor_id) {
+		log_error($"Mod {wod.mod_id} tried to register a supervisor with invalid ID {item_id}")
+		return;
+	}
+	if bimap_right_exists(global.supervisors, supervisor) {
+		var current_id = bimap_get_left(global.supervisors, supervisor)
+		log_error($"Mod {wod.mod_id} tried to register a supervisor struct with ID {supervisor_id},"
+			+ $" but this struct has already been registered prior to {current_id}! Each struct registered must be unique.")	
+		return;
+	}
+	
 	static supervisor_contract = {
 		display_name : "",
 		description : "",
@@ -9,26 +23,19 @@ function register_mod_supervisor(supervisor, supervisor_id) {
 		on_create : global.empty_method,
 		on_destroy : global.empty_method,
 	}
-	var wod = global.currently_executing_mod;
 	var discompliance = get_struct_discompliance_with_contract(supervisor, supervisor_contract)
 	if array_length(discompliance.missing) > 0 || array_length(discompliance.mismatched_types) > 0 {
-		throw ($"Supervisor {supervisor_id} from {wod.mod_id} has bad variables!\n" 
-			+ generate_discompliance_error_text(supervisor, supervisor_contract, discompliance))
+		log_error($"Supervisor {supervisor_id} from {wod.mod_id} has bad variables!\n" 
+			+ generate_discompliance_error_text(supervisor, supervisor_contract, discompliance)
+			+ "\nThe supervisor is not registered.")
+		return;
 	}
 	
 	static sprites_contract = {
 		idle_neutral : agi("obj_empty"),
 		preview : agi("obj_empty"),
 	}
-	
-	var sprites_discompliance = get_struct_discompliance_with_contract(supervisor.sprites, sprites_contract)
-	if array_length(sprites_discompliance.missing) > 0 || array_length(sprites_discompliance.mismatched_types) > 0 {
-		throw ($"Supervisor {supervisor_id} from {wod.mod_id} has bad sprite variables!\n" 
-			+ generate_discompliance_error_text(supervisor.sprites, sprites_contract, sprites_discompliance))
-	}
-	
 	var idle_neutral_sprite = supervisor.sprites.idle_neutral;
-
 	var optional_sprites = {
 		angry : idle_neutral_sprite,
 		evil : idle_neutral_sprite,
@@ -42,92 +49,97 @@ function register_mod_supervisor(supervisor, supervisor_id) {
 		happy : idle_neutral_sprite,
 		idle_grimace : idle_neutral_sprite
 	}
-	initialize_missing(supervisor.sprites, optional_sprites)
+	var required = get_struct_discompliance_with_contract(supervisor.sprites, sprites_contract)
+	var optional = get_struct_discompliance_with_contract(supervisor.sprites, optional_sprites)
+	var sprites_discompliance = 
+	{
+		missing : required.missing,
+		mismatched_types : array_concat(required.mismatched_types, optional.mismatched_types)
+	}
+	if array_length(sprites_discompliance.missing) > 0 || array_length(sprites_discompliance.mismatched_types) > 0 {
+		log_error($"Supervisor {supervisor_id} from {wod.mod_id} has bad sprite variables!\n" 
+			+ generate_discompliance_error_text(supervisor.sprites, sprites_contract, sprites_discompliance)
+			+ "\nThe supervisor is not registered.")
+		return;
+	}
 	
-	supervisor.mod_of_origin = wod;
-	supervisor.string_id = supervisor_id
-	ds_map_set(wod.supervisors, supervisor_id, supervisor)
-	log_info($"Supervisor {supervisor_id} registered to {wod.mod_id}");
+	initialize_missing(supervisor.sprites, optional_sprites)
+
+	var full_id = $"{wod.mod_id}:{supervisor_id}"
+	bimap_set(global.supervisors, full_id, supervisor)
+	array_push(wod.supervisors)
+	log_info($"Supervisor {full_id} registered");
 	return supervisor;
 }
 
 
 // Called from gml_Object_obj_SupervisorMGMT_Create_0
 function register_supervisors_for_gameplay() {
-	ds_map_clear(global.supervisor_to_index_map)
-	ds_map_clear(global.index_to_supervisor_map)
+	free_all_allocated_objects(mod_resources.supervisor)
+	clear_index_assignments(mod_resources.supervisor)
 	
-	free_all_allocated_objects(allocatable_objects.supervisor)
-	
-	var mods = ds_map_values_to_array(global.mod_id_to_mod_map)
-	for (var i = 0; i < array_length(mods); i++) {
-		var wod = mods[i];
-		
-		var supervisors = ds_map_values_to_array(wod.supervisors)
-		for (var j = 0; j < array_length(supervisors); j++) {		
-			with (agi("obj_SupervisorMGMT")) {
-				var supervisor_number_id = array_length(SuperVisorName)
-				var supervisor = supervisors[j];
-				SuperVisorName[supervisor_number_id] = agi("scr_Text")(supervisor.display_name);
-				SuperVisorDesc[supervisor_number_id] = agi("scr_Text")(supervisor.description, "\n");
-				SVSprite[supervisor_number_id] = supervisor.sprites.preview;
-				SuperVisorCol1[supervisor_number_id] = supervisor.name_color;
-				SuperVisorCol2[supervisor_number_id] = 255; // Unused as of now
-				SVCost[supervisor_number_id] = supervisor.cost;
-				
-				var obj = allocate_object(allocatable_objects.supervisor, supervisor)
-				
-				supervisor.object = obj;
 
+	var supervisor_ids = bimap_lefts_array(global.supervisors)
+	for (var i = 0; i < array_length(supervisor_ids); i++) {		
+		with (agi("obj_SupervisorMGMT")) {
+			var supervisor = bimap_get_right(global.supervisors, supervisor_ids[i])
+			var supervisor_index = array_length(SuperVisorName)
+
+			SuperVisorName[supervisor_index] = agi("scr_Text")(supervisor.display_name);
+			SuperVisorDesc[supervisor_index] = agi("scr_Text")(supervisor.description, "\n");
+			SVSprite[supervisor_index] = supervisor.sprites.preview;
+			SuperVisorCol1[supervisor_index] = supervisor.name_color;
+			SuperVisorCol2[supervisor_index] = 255; // Unused as of now
+			SVCost[supervisor_index] = supervisor.cost;
 				
-				log_info($"Supervisor {supervisor.string_id} gameplay registered from mod {supervisor.mod_of_origin.mod_id}")
-				ds_map_set(global.supervisor_to_index_map, supervisor, supervisor_number_id)
-				ds_map_set(global.index_to_supervisor_map, supervisor_number_id, supervisor)
-
-			}
-
+			var obj = allocate_object(mod_resources.supervisor, supervisor)
+				
+			// TODO. use a map for this.
+			supervisor.__object = obj;
+				
+			assign_index_to_resource(mod_resources.supervisor, supervisor, supervisor_index)
+			log_info($"Supervisor {supervisor_ids[i]} has been indexed: {supervisor_index}")
 		}
 	}
 }
 // Called from gml_Object_obj_LvlMGMT_Other_4
 function create_mod_supervisor_object(index_id) {
-	if !ds_map_exists(global.index_to_supervisor_map, index_id) {
-		return;	// Vanilla supervisor
-	}
+	var supervisor = get_resource_by_index(mod_resources.supervisor, index_id);
+	if is_undefined(supervisor)
+		return; // Vanilla supervisor
 
-	var obj = ds_map_find_value(global.index_to_supervisor_map, index_id).object
-	
+	var obj = supervisor.__object;
 	agi("obj_LvlMGMT").SVManager = instance_create_layer(0, 0, "GAME", obj)
 	
 }
 
 // Called from gml_Object_obj_TonyMGMT_Create_0
 function register_supervisors_sprites_for_gameplay() {
-	var mods = ds_map_values_to_array(global.mod_id_to_mod_map)
-	for (var i = 0; i < array_length(mods); i++) {
-		var wod = mods[i];
-		var supervisors = ds_map_values_to_array(wod.supervisors)
-		for (var j = 0; j < array_length(supervisors); j++) {		
-			with (agi("obj_TonyMGMT")) {
-				var supervisor = supervisors[j];
-				var supervisor_number_id = ds_map_find_value(global.supervisor_to_index_map, supervisor)
-				var sprites = supervisor.sprites;
-				
-				TonyAngrySpr[supervisor_number_id] = sprites.angry
-				TonyEvilSpr[supervisor_number_id] = sprites.evil
-				TonyHappySpr[supervisor_number_id] = sprites.happy
-				TonyHeadSwivelSpr[supervisor_number_id] = sprites.head_swivel
-				TonyIdleGrimaceSpr[supervisor_number_id] = sprites.idle_grimace
-				TonyIdleHappySpr[supervisor_number_id] = sprites.idle_happy
-				TonyIdleNeutralSpr[supervisor_number_id] = sprites.idle_neutral
-				TonyIdleSadSpr[supervisor_number_id] = sprites.idle_sad
-				TonyIdleWeirdSpr[supervisor_number_id] = sprites.idle_weird
-				TonySadSpr[supervisor_number_id] = sprites.sad
-				TonyScreamSpr[supervisor_number_id] = sprites.scream
-				TonyTalkSpr[supervisor_number_id] = sprites.talk
-				
-				log_info($"Supervisor {supervisor.string_id} sprites registered from mod {supervisor.mod_of_origin.mod_id}")
-			}
-		}
+	var index_id = agi("obj_LvlMGMT").SVID
+	
+	var supervisor = get_resource_by_index(mod_resources.supervisor, index_id);
+	// We only need to register the sprites of the supervisor we're using, if we are using a modded one...
+	if is_undefined(supervisor)
+		return;
+
+	// TODO: Perhaps we can somehow make it so the modded supervisor always takes the last index
+	// since we don't fill any indices before it
+	
+	var sprites = supervisor.sprites;
+	with (agi("obj_TonyMGMT")) {
+		TonyAngrySpr[index_id] = sprites.angry
+		TonyEvilSpr[index_id] = sprites.evil
+		TonyHappySpr[index_id] = sprites.happy
+		TonyHeadSwivelSpr[index_id] = sprites.head_swivel
+		TonyIdleGrimaceSpr[index_id] = sprites.idle_grimace
+		TonyIdleHappySpr[index_id] = sprites.idle_happy
+		TonyIdleNeutralSpr[index_id] = sprites.idle_neutral
+		TonyIdleSadSpr[index_id] = sprites.idle_sad
+		TonyIdleWeirdSpr[index_id] = sprites.idle_weird
+		TonySadSpr[index_id] = sprites.sad
+		TonyScreamSpr[index_id] = sprites.scream
+		TonyTalkSpr[index_id] = sprites.talk
 	}
+	var string_id = bimap_get_left(global.supervisors, supervisor)
+	log_info($"Supervisor {string_id} sprites have been indexed: {index_id}")
 }

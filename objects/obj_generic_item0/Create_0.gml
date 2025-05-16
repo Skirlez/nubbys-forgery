@@ -5,11 +5,16 @@ allocated_id = real(string_digits(object_get_name(object_index)))
 
 // These objects are allocated to different items.
 // Get the item this object is allocated to
-item = get_allocated_object(allocatable_objects.item, allocated_id)
+item = get_resource_allocated_to_object(mod_resources.item, allocated_id)
 // This item struct determines how this object behaves.
 
 // Get the item's index ID
-MyItemID = ds_map_find_value(global.item_id_to_index_map, get_full_id(item))
+MyItemID = get_index_of_resource(mod_resources.item, item)
+
+// Get its string ID, for logging
+string_id = bimap_get_left(global.items, item)
+
+mod_of_origin = ds_map_find_value(global.mod_id_to_mod_map, mod_identifier_get_namespace(string_id))
 
 // The following variables are set before create, so modders can override if they want to for some reason
 EvType = agi("obj_ItemMGMT").ItemTrig[MyItemID]
@@ -37,11 +42,11 @@ if (ItemLevel == 1)
     alarm_set(6, 1)
 
 MyItemBacker = -1
+global.currently_executing_mod = mod_of_origin;
 try {
-	global.currently_executing_mod = item.mod_of_origin;
 	catspeak_execute_ext(item.on_create, self)
 }
 catch (e) {
-	log_error($"Item {item.string_id} errored on creation: {e}")
+	log_error($"Item {string_id} errored on creation: {pretty_error(e)}")
 	// TODO disable item
 }

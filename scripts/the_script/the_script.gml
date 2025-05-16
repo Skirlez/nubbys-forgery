@@ -1,10 +1,11 @@
+// Everything used to be in this script. Then I put things in other scripts.
 #macro agi asset_get_index
 
 function create_mod(mod_folder_name) {
 	var mod_definition_file = file_text_open_read($"{global.mods_directory}/{mod_folder_name}/mod.json")
 	if (mod_definition_file == -1) {
 		return new result_error(new generic_error(
-			$"Error: Could not find mod.json for mod folder {mod_folder_name}"));
+			$"Could not find mod.json for mod folder {mod_folder_name}"));
 	}
 	var mod_definition_string = ""
 	while (!file_text_eof(mod_definition_file)) {
@@ -17,7 +18,7 @@ function create_mod(mod_folder_name) {
 	}
 	catch (e) {
 		return new result_error(new generic_error(
-			$"Error while parsing mod.json in mod folder {mod_folder_name}: {e}"));
+			$"Error while parsing mod.json in mod folder {mod_folder_name}: {pretty_error(e)}"));
 	}
 	
 	static mod_contract = {
@@ -40,18 +41,20 @@ function create_mod(mod_folder_name) {
 		))
 	}
 	
-	wod.code_files = ds_map_create();
 	wod.folder_name = mod_folder_name;
+	wod.translations = ds_map_create();
 	
-	// not running this line will cause it to lazily evaluate/compile every file
-	// the mod requests
+	load_mod_translations(wod)
+	
+	wod.code_files = ds_map_create();
+
 	if wod.compile_all_code_on_load {
 		log_info($"Compiling all files belonging to mod {wod.mod_id}")
 		compile_all_files_in_path_recursively("/", wod, wod.code_files)
 	}
 	global.currently_executing_mod = wod;
 	try {
-		var mod_globals = init_code_file_and_get_globals(wod.entrypoint_path, wod)
+		var mod_globals = mod_get_code_file_globals(wod.entrypoint_path, wod)
 	}
 	catch (e) {
 		return new result_error(new generic_error(e))
@@ -70,12 +73,10 @@ function create_mod(mod_folder_name) {
 	}
 	
 	
-	wod.items = ds_map_create();
-	wod.perks = ds_map_create();
-	wod.supervisors = ds_map_create();
+	wod.items = []
+	wod.perks = []
+	wod.supervisors =  []
 	//wod.foods = ds_map_create();
-	wod.sprites = []
-	wod.translations = ds_map_create();
 	wod.sprites = ds_map_create();
 	wod.audio_streams = ds_map_create();
 	
@@ -106,21 +107,19 @@ function compile_all_files_in_path_recursively(path, map, wod) {
 }
 
 
-// for catspeak use
-function execute_mod_code_file(path, wod = global.currently_executing_mod) {
-	var code = get_code_file(path, wod)
+// For catspeak use
+function mod_execute_code_file(path, wod = global.currently_executing_mod) {
+	var code = mod_get_code_file(path, wod)
 	code();
 }
-function get_code_file_globals(path, wod = global.currently_executing_mod) {
-	var code = get_code_file(path, wod)
-	return catspeak_globals(code)
+// For catspeak use
+function mod_get_code_file_globals(path, wod = global.currently_executing_mod) {
+	var code = mod_get_code_file(path, wod)
+	var globals = catspeak_globals(code);
+	if variable_struct_names_count(globals) == 0
+		code();
+	return globals;
 }
-function init_code_file_and_get_globals(path, wod = global.currently_executing_mod) {
-	var code = get_code_file(path, wod)
-	code();
-	return catspeak_globals(code)
-}
-// For gamemaker and catspeak use
 
 /*
 TODO:
@@ -128,18 +127,20 @@ I cannot remember why I implemented code_files with nested maps.
 I don't think it needs nested maps. Could just have code_files be a map of path strings to code files.
 Probably should rewrite this to do that.
 */
-function get_code_file(path, wod = global.currently_executing_mod) {
+
+// For gamemaker and catspeak use
+function mod_get_code_file(path, wod = global.currently_executing_mod) {
 	var path_arr = string_split(path, "/", true)
 	var current_thing = wod.code_files
 	var current_full_directory = $"{global.mods_directory}/{wod.folder_name}";
 	if array_length(path_arr) == 0 {
-		throw $"Error: mod {wod.mod_id} requested code file from bad path ({path})"	
+		throw $"Mod {wod.mod_id} requested code file from bad path ({path})"	
 	}
 	for (var i = 0; i < array_length(path_arr); i++) {
 		var new_location = path_arr[i];
 		var last_entry = i == array_length(path_arr) - 1;
 		if !ds_map_exists(current_thing, new_location) {
-			var error_message = $"Error: mod {wod.mod_id} requested code file from {path}, but {new_location} does not exist";
+			var error_message = $"Mod {wod.mod_id} requested code file from {path}, but {new_location} does not exist";
 			if !(last_entry) {
 				// missing folder
 				if !directory_exists($"{current_full_directory}/{new_location}")
@@ -156,7 +157,7 @@ function get_code_file(path, wod = global.currently_executing_mod) {
 					var main = Catspeak.compile(ir);
 				}
 				catch (e) {
-					throw $"Error: mod {wod.mod_id} requested file {path} which errored on compilation: {e}"	
+					throw $"Mod {wod.mod_id} requested file {path} which errored on compilation: {pretty_error(e)}"	
 				}
 				ds_map_add(current_thing, new_location, main)
 				buffer_delete(buffer)
@@ -166,7 +167,7 @@ function get_code_file(path, wod = global.currently_executing_mod) {
 		
 		if !ds_map_is_map(current_thing, new_location) && !last_entry
 				|| (ds_map_is_map(current_thing, new_location) && last_entry) {
-			throw $"Error: requested code file from bad path ({path})"
+			throw $"Requested code file from bad path ({path})"
 		}
 		current_thing = ds_map_find_value(current_thing, new_location)
 		current_full_directory += $"/{new_location}"
@@ -179,25 +180,18 @@ function strip_initial_path_separator_character(path) {
 		path = string_delete(path, 1, 1)	
 	return path
 }
-function mod_get_path(path, wod = global.currently_executing_mod) {
-	path = strip_initial_path_separator_character(path);
-	
-	// TODO run check for if this is a real directory or file and warn if it isn't
-	
-	return $"{global.mods_directory}/{wod.folder_name}/{path}"	
-}
 
 
 function unload_mod(wod) {
 	log_info($"Unloading mod {wod.mod_id}")
-	var main = get_code_file("mod.meow", wod)
+	var main = mod_get_code_file("mod.meow", wod)
 	var main_globals = catspeak_globals(main)
 	global.currently_executing_mod = wod;
 	try {
 		main_globals.on_unload();
 	}
 	catch (e) {
-		log_error($"Mod {wod.mod_id} errored while unloading: {e}")
+		log_error($"Mod {wod.mod_id} errored while unloading: {pretty_error(e)}")
 	}
 	
 	// Remove any Game Event callbacks this mod has
@@ -216,9 +210,16 @@ function unload_mod(wod) {
 			ds_map_delete(global.modloader_game_events, game_event_name);
 	}
 	
-	ds_map_destroy(wod.items)
-	ds_map_destroy(wod.perks)
-	ds_map_destroy(wod.supervisors)
+	for (var i = 0; i < array_length(wod.items); i++) {
+		bimap_delete_right(global.items, wod.items[i])	
+	}
+	for (var i = 0; i < array_length(wod.perks); i++) {
+		bimap_delete_right(global.perks, wod.perks[i])	
+	}
+	for (var i = 0; i < array_length(wod.supervisors); i++) {
+		bimap_delete_right(global.supervisors, wod.supervisors[i])	
+	}
+	
 	var translation_keys = ds_map_keys_to_array(wod.translations)
 	for (var i = 0; i < array_length(translation_keys); i++) {
 		ds_grid_destroy(ds_map_find_value(wod.translations, translation_keys[i]))	
@@ -250,6 +251,9 @@ function clear_all_mods() {
 		unload_mod(wod)
 	}
 	ds_map_clear(global.mod_id_to_mod_map)
+	bimap_clear(global.items)
+	bimap_clear(global.perks)
+	bimap_clear(global.supervisors)
 }
 
 
@@ -266,16 +270,14 @@ function read_all_mods() {
 		var wod = mod_result.value
 		ds_map_set(global.mod_id_to_mod_map, wod.mod_id, wod);
 		
-		load_mod_translations(wod)
-		
-		var main = get_code_file("mod.meow", wod)
+		var main = mod_get_code_file("mod.meow", wod)
 		var main_globals = catspeak_globals(main)
 		try {
 			global.currently_executing_mod = wod;
 			main_globals.on_load();
 		}
 		catch (e) {
-			log_error($"Mod {wod.mod_id} errored on load: {e}")
+			log_error($"Mod {wod.mod_id} errored on load: {pretty_error(e)}")
 			// TODO what to do
 			unload_mod(wod)
 			continue;
@@ -294,7 +296,7 @@ function reroll_cheats_enabled() {
 	return false;	
 }
 
-function get_full_id(appropriate_struct) {
-	// TODO check if struct is item/perk/supervisor
-	return $"{appropriate_struct.mod_of_origin.mod_id}:{appropriate_struct.string_id}"	
+function pretty_error(e) {
+	// TODO
+	return string(e);
 }

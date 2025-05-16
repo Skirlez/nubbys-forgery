@@ -5,19 +5,26 @@ allocated_id = real(string_digits(object_get_name(object_index)))
 
 // These objects are allocated to different items.
 // Get the supervisor this object is allocated to
-supervisor = get_allocated_object(allocatable_objects.supervisor, allocated_id)
+supervisor = get_resource_allocated_to_object(mod_resources.supervisor, allocated_id)
 // This supervisor struct determines how this object behaves.
 
 
 // Get the supervisor's index ID. Though none of them use it. But might as well get it,
 // as perks and items do.
-SVID = ds_map_find_value(global.supervisor_to_index_map, supervisor)
+SVID = get_index_of_resource(mod_resources.supervisor, supervisor)
 
+// Get its string ID, for logging
+string_id = bimap_get_left(global.supervisors, supervisor)
+
+mod_of_origin = ds_map_find_value(global.mod_id_to_mod_map, mod_identifier_get_namespace(string_id))
+
+
+
+global.currently_executing_mod = mod_of_origin;
 try {
-	global.currently_executing_mod = supervisor.mod_of_origin;
 	catspeak_execute_ext(supervisor.on_create, self)
 }
 catch (e) {
-	log_error($"Supervisor {supervisor.string_id} errored on creation: {e}")
+	log_error($"Supervisor {string_id} errored on creation: {pretty_error(e)}")
 	// TODO leave game?
 }

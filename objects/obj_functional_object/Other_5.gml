@@ -5,5 +5,5 @@ try {
 	catspeak_execute_ext(on_room_end, self)
 }
 catch (e) {
-	log_error($"{error_string} Room End: {e}")
+	log_error($"{error_string} Room End: {pretty_error(e)}")
 }

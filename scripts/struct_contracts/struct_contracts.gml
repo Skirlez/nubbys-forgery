@@ -29,7 +29,8 @@ function get_struct_discompliance_with_contract(struct, contract_struct) {
 function generate_discompliance_error_text(struct, contract_struct, discompliance) {
 	var text = ""
 	for (var i = 0; i < array_length(discompliance.missing); i++) {
-		text += $"Missing variable: {discompliance.missing[i]}\n";	
+		var variable_name = discompliance.missing[i];
+		text += $"Missing variable: {variable_name} (type: {typeof(contract_struct[$ variable_name])})\n";	
 	}
 	for (var i = 0; i < array_length(discompliance.mismatched_types); i++) {
 		var variable_name = discompliance.mismatched_types[i];

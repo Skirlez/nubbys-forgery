@@ -1,5 +1,18 @@
+global.perks = bimap_create();
+
 // For catspeak
-function register_mod_perk(perk, perk_id) {
+function mod_register_perk(perk, perk_id, wod = global.currently_executing_mod) {
+	if !mod_is_id_component_valid(perk_id) {
+		log_error($"Mod {wod.mod_id} tried to register an item with invalid ID {perk_id}")
+		return;
+	}
+	if bimap_right_exists(global.perks, perk) {
+		var current_id = bimap_get_left(global.perks, perk)
+		log_error($"Mod {wod.mod_id} tried to register a perk struct with ID {perk_id},"
+			+ $" but this struct has already been registered prior to {current_id}! Each struct registered must be unique.")
+		return;
+	}
+	
 	static perk_contract = {
 		display_name : "",
 		description : "",
@@ -9,56 +22,55 @@ function register_mod_perk(perk, perk_id) {
 		type : 0,
 		pool : 0,
 		trigger_fx_color : int64(0),
+		additional_info_type : 0,
 		on_create : global.empty_method,
 		on_trigger : global.empty_method,
 	}
 
-	var wod = global.currently_executing_mod;
-
 	var discompliance = get_struct_discompliance_with_contract(perk, perk_contract)
 	if array_length(discompliance.missing) > 0 || array_length(discompliance.mismatched_types) > 0 {
-		throw ($"Perk {perk_id} from {wod.mod_id} has bad variables!\n" 
-			+ generate_discompliance_error_text(perk, perk_contract, discompliance))
+		log_error($"Perk {perk_id} from {wod.mod_id} has bad variables!\n" 
+			+ generate_discompliance_error_text(perk, perk_contract, discompliance)
+			+ "\nThe perk is not registered.")
+			
+		return;
 	}	
-	perk.mod_of_origin = wod;
-	perk.string_id = perk_id;
-	ds_map_set(wod.perks, perk_id, perk)
-	log_info($"Perk {perk_id} registered to {wod.mod_id}");
+
+	var full_id = $"{wod.mod_id}:{perk_id}"
+	bimap_set(global.perks, full_id, perk)
+	array_push(wod.perks, perk)
+	log_info($"Perk {full_id} registered");
 	return perk;
 }
 
 // called from gml_Object_obj_PerkMGMT_Create_0
 function register_perks_for_gameplay() {
-	free_all_allocated_objects(allocatable_objects.perk)
+	free_all_allocated_objects(mod_resources.perk)
+	clear_index_assignments(mod_resources.perk)
+		
+	var perk_ids = bimap_lefts_array(global.perks)
+	for (var i = 0; i < array_length(perk_ids); i++) {			
+		var perk = bimap_get_right(global.perks, perk_ids[i])
+			
+		var perk_index = array_length(agi("obj_PerkMGMT").PerkID)
 
-	ds_map_clear(global.perk_id_to_index_map)
-	ds_map_clear(global.index_to_perk_id_map)
-	var mods = ds_map_values_to_array(global.mod_id_to_mod_map)
-	for (var i = 0; i < array_length(mods); i++) {
-		var wod = mods[i];
-		var perks = ds_map_values_to_array(wod.perks)
-		for (var j = 0; j < array_length(perks); j++) {			
-			var perk = perks[j];
+		var obj = allocate_object(mod_resources.perk, perk)
+		object_set_sprite(obj, perk.sprite)
 			
-			var perk_number_id = array_length(agi("obj_PerkMGMT").PerkID)
-
-			var obj = allocate_object(allocatable_objects.perk, perk)
-			object_set_sprite(obj, perk.sprite)
-			log_info($"Perk {perk.string_id} gameplay registered from mod {perk.mod_of_origin.mod_id}")
+		agi("scr_Init_Perk")(perk_index,
+			agi("scr_Text")(perk.display_name),
+			obj,
+			perk.game_event, 
+			perk.tier, 
+			perk.type, 
+			perk.pool,
+			perk.trigger_fx_color, 
+			perk.additional_info_type,
+			agi("scr_Text")(perk.description, "\n"))
 			
-			agi("scr_Init_Perk")(perk_number_id,
-				agi("scr_Text")(perk.display_name),
-				obj,
-				perk.game_event, 
-				perk.tier, 
-				perk.type, 
-				perk.pool,
-				perk.trigger_fx_color, 
-				perk.additional_info_type,
-				agi("scr_Text")(perk.description, "\n"))
-			
-			ds_map_set(global.perk_id_to_index_map, get_full_id(perk), perk_number_id)
-			ds_map_set(global.index_to_perk_id_map, perk_number_id, get_full_id(perk))
-		}
+		assign_index_to_resource(mod_resources.perk, perk, perk_index)
+		log_info($"Perk {perk_ids[i]} has been indexed: {perk_index}")
 	}
 }
+
+

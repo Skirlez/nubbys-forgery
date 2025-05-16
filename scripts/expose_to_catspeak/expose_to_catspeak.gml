@@ -1,4 +1,3 @@
-
 function expose_to_catspeak() {
 	// One of the goals of this project is to not limit what mods can do.
 	// The worst thing enabling this can do is allow mods to delete saved scores,

@@ -5,5 +5,5 @@ try {
 	catspeak_execute_ext(on_step, self)
 }
 catch (e) {
-	log_error($"{error_string} Step: {e}")
+	log_error($"{error_string} Step: {pretty_error(e)}")
 }

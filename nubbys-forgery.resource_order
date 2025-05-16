@@ -22,6 +22,9 @@
   ],
   "ResourceOrderSettings": [
     {"name":"obj_functional_object","order":3,"path":"objects/obj_functional_object/obj_functional_object.yy",},
+    {"name":"bimap_functions","order":19,"path":"scripts/bimap_functions/bimap_functions.yy",},
+    {"name":"api","order":17,"path":"scripts/api/api.yy",},
+    {"name":"indexing","order":18,"path":"scripts/indexing/indexing.yy",},
     {"name":"generic_object_allocation","order":5,"path":"scripts/generic_object_allocation/generic_object_allocation.yy",},
     {"name":"obj_SVManagerPar","order":2,"path":"objects/obj_SVManagerPar/obj_SVManagerPar.yy",},
     {"name":"mod_supervisors","order":16,"path":"scripts/mod_supervisors/mod_supervisors.yy",},

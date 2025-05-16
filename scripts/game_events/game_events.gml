@@ -1,6 +1,6 @@
 global.modloader_game_events = ds_map_create();
 
-function subscribe_to_game_event(name, callback, wod = global.currently_executing_mod) {
+function mod_subscribe_to_game_event(name, callback, wod = global.currently_executing_mod) {
 	var arr;
 	if !ds_map_exists(global.modloader_game_events, name) {
 		arr = []
@@ -31,7 +31,7 @@ function on_game_event(name) {
 			struct.callback();
 		}
 		catch (e) {
-			log_error($"Mod ${struct.mod_of_origin.mod_id} errored on {name} Game Event callback: {e}")
+			log_error($"Mod ${struct.mod_of_origin.mod_id} errored on {name} Game Event callback: {pretty_error(e)}")
 		}
 	}
 }

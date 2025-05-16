@@ -5,5 +5,5 @@ try {
 	catspeak_execute_ext(on_draw_end, self)
 }
 catch (e) {
-	log_error($"{error_string} Draw End: {e}")
+	log_error($"{error_string} Draw End: {pretty_error(e)}")
 }

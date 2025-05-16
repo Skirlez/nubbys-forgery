@@ -1,23 +1,16 @@
-
-enum allocatable_objects {
-	item,
-	perk,
-	supervisor,
-}
-global.allocatable_object_names = ["item", "perk", "supervisor"]
-
-global.allocated_objects = ds_map_create();
+global.allocated_objects = array_create_ext(mod_resources.size, function () { 
+	return [] 
+})
 function allocate_object(type, resource) {
-	if !ds_map_exists(global.allocated_objects, type)
-		ds_map_add(global.allocated_objects, type, [])
-	var arr = ds_map_find_value(global.allocated_objects, type);
+	static allocatable_object_names = ["item", "perk", "supervisor"]
+	
+	var arr = global.allocated_objects[type]
 	array_push(arr, resource);
-	return agi($"obj_generic_{global.allocatable_object_names[type]}{array_length(arr) - 1}");
+	return agi($"obj_generic_{allocatable_object_names[type]}{array_length(arr) - 1}");
 }
 function free_all_allocated_objects(type) {
-	ds_map_set(global.allocated_objects, type, [])
+	global.allocated_objects[type] = []
 }
-function get_allocated_object(type, num) {
-	return ds_map_find_value(global.allocated_objects, type)[num]
+function get_resource_allocated_to_object(type, num) {
+	return global.allocated_objects[type][num]
 }
-
