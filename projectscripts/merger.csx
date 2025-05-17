@@ -136,13 +136,24 @@ foreach (string file in files) {
 }
 
 void applyPatches(string codeEntryName, string patches) {
-	UndertaleModLib.Compiler.CodeImportGroup importGroup = new(Data);
 	UndertaleCode entry = Data.Code.ByName(codeEntryName);
+
+	// Same default settings as editor
+	Underanalyzer.Decompiler.DecompileSettings settings = new();
+	settings.UnknownArgumentNamePattern = "arg{0}";
+	settings.RemoveSingleLineBlockBraces = true;
+	settings.EmptyLineAroundBranchStatements = true;
+	settings.EmptyLineBeforeSwitchCases = true;
+
+	GlobalDecompileContext globalContext = new GlobalDecompileContext(Data);
+
+	CodeImportGroup importGroup = new(Data, globalContext, settings);
+
 	string targetPattern = @"// TARGET: ([^\n\r]+)";
 	string[] sections = Regex.Split(patches, targetPattern);
 
 	for (int i = 1; i < sections.Length; i += 2) {
-		string code = GetDecompiledText(entry);
+		string code = GetDecompiledText(entry, globalContext, settings);
 		string target = sections[i];
 		string patch = sections[i + 1].Trim();
 		string finalResult;

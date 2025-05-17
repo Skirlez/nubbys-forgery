@@ -1,13 +1,11 @@
-global.items = bimap_create();
-
 // For catspeak
 function mod_register_item(item, item_id, wod = global.currently_executing_mod) {
 	if !mod_is_id_component_valid(item_id) {
 		log_error($"Mod {wod.mod_id} tried to register an item with invalid ID {item_id}")
 		return;
 	}
-	if bimap_right_exists(global.items, item) {
-		var current_id = bimap_get_left(global.perks, item)
+	if bimap_right_exists(global.registry[mod_resources.item], item) {
+		var current_id = bimap_get_left(global.registry[mod_resources.perk], item)
 		log_error($"Mod {wod.mod_id} tried to register an item struct with ID {item_id},"
 			+ $" but this struct has already been registered prior to {current_id}! Each struct registered must be unique.")	
 		return;
@@ -18,12 +16,11 @@ function mod_register_item(item, item_id, wod = global.currently_executing_mod) 
 		description : "",
 		game_event : "",
 		alt_game_event : "",
-		sprite : agi("obj_empty"),
+		sprite : agi("spr_empty"),
 		level : 0,
-		type : 0,
 		tier : 0,
-		status : 0,
-		effect_id : "",
+		augment : "",
+		effect : "",
 		pool : 0,
 		offset_price : 0,
 		pair_id : "",
@@ -51,8 +48,9 @@ function mod_register_item(item, item_id, wod = global.currently_executing_mod) 
 	
 	var full_id = $"{wod.mod_id}:{item_id}"
 	
-	bimap_set(global.items, full_id, item)
+	bimap_set(global.registry[mod_resources.item], full_id, item)
 	array_push(wod.perks, item)
+	
 	log_info($"Item {full_id} registered");
 	return item;
 }
@@ -71,9 +69,9 @@ function register_items_for_gameplay() {
 	free_all_allocated_objects(mod_resources.item)
 	clear_index_assignments(mod_resources.item)
 	
-	var item_ids = bimap_lefts_array(global.items)
+	var item_ids = bimap_lefts_array(global.registry[mod_resources.item])
 	for (var i = 0; i < array_length(item_ids); i++) {			
-		var item = bimap_get_right(global.items, item_ids[i])
+		var item = bimap_get_right(global.registry[mod_resources.item], item_ids[i])
 			
 		var item_index = array_length(agi("obj_ItemMGMT").ItemID)
 
@@ -83,11 +81,11 @@ function register_items_for_gameplay() {
 		agi("scr_Init_Item")(item_index,
 			agi("scr_Text")(item.display_name),
 			obj,
-			item.level, 
-			item.type, 
+			item.level,
+			0, // previously item.type. It's all 0 for items 
 			item.tier, 
-			item.status,
-			item.effect_id, 
+			item.augment,
+			item.effect, 
 			item.pool, 
 			item.offset_price, 
 			item.pair_id, 
@@ -110,17 +108,18 @@ function register_items_for_gameplay() {
 	for (var i = 0; i < array_length(item_pair_arr); i++) {
 		if !is_string(item_pair_arr[i])
 			continue;
-		
-		if !bimap_left_exists(global.items, item_pair_arr[i]) {
-			var this_item = get_resource_by_index(mod_resources.item, i)
-			var this_item_id = bimap_get_left(global.items, this_item);
+		var pair_id = item_pair_arr[i]
+		if !bimap_left_exists(global.registry[mod_resources.item], pair_id) {
+			var this_item = bimap_get_right(global.index_registry[mod_resources.item], i)
+			var this_item_id = bimap_get_left(global.registry[mod_resources.item], this_item);
 			
-			log_error($"Item {this_item_id} has {item_pair_arr[i]} set"
+			log_error($"Item {this_item_id} has {pair_id} set"
 				+ " as its pair, but it does not exist! Setting it to Pants")
 			item_pair_arr[i] = 0;
 			continue;
 		}
-		item_pair_arr[i] = bimap_get_left(global.items, item_pair_arr[i])
+		
+		item_pair_arr[i] = registries_exchange(global.registry, global.index_registry, mod_resources.item, pair_id)
 	}
 }
 

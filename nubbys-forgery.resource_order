@@ -21,10 +21,11 @@
     {"name":"Timelines","order":8,"path":"folders/Timelines.yy",},
   ],
   "ResourceOrderSettings": [
+    {"name":"mod_registry","order":20,"path":"scripts/mod_registry/mod_registry.yy",},
     {"name":"obj_functional_object","order":3,"path":"objects/obj_functional_object/obj_functional_object.yy",},
-    {"name":"bimap_functions","order":19,"path":"scripts/bimap_functions/bimap_functions.yy",},
+    {"name":"bidrectional_map","order":19,"path":"scripts/bidrectional_map/bidrectional_map.yy",},
     {"name":"api","order":17,"path":"scripts/api/api.yy",},
-    {"name":"indexing","order":18,"path":"scripts/indexing/indexing.yy",},
+    {"name":"mod_index_registry","order":18,"path":"scripts/mod_index_registry/mod_index_registry.yy",},
     {"name":"generic_object_allocation","order":5,"path":"scripts/generic_object_allocation/generic_object_allocation.yy",},
     {"name":"obj_SVManagerPar","order":2,"path":"objects/obj_SVManagerPar/obj_SVManagerPar.yy",},
     {"name":"mod_supervisors","order":16,"path":"scripts/mod_supervisors/mod_supervisors.yy",},

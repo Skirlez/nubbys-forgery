@@ -5,13 +5,6 @@ catspeak_force_init();
 
 expose_to_catspeak();
 
-enum mod_resources {
-	item,
-	perk,
-	supervisor,
-	size,
-}
-
 global.mod_id_to_mod_map = ds_map_create();
 
 global.logging_socket = network_create_socket(network_socket_udp)

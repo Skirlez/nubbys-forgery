@@ -11,10 +11,10 @@ supervisor = get_resource_allocated_to_object(mod_resources.supervisor, allocate
 
 // Get the supervisor's index ID. Though none of them use it. But might as well get it,
 // as perks and items do.
-SVID = get_index_of_resource(mod_resources.supervisor, supervisor)
+SVID = bimap_get_left(global.index_registry[mod_resources.supervisor], supervisor)
 
 // Get its string ID, for logging
-string_id = bimap_get_left(global.supervisors, supervisor)
+string_id = bimap_get_left(global.registry[mod_resources.supervisor], supervisor)
 
 mod_of_origin = ds_map_find_value(global.mod_id_to_mod_map, mod_identifier_get_namespace(string_id))
 

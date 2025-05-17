@@ -9,10 +9,10 @@ perk = get_resource_allocated_to_object(mod_resources.perk, allocated_id)
 // This perk struct determines how this object behaves.
 
 // Get the perk's index ID
-MyPerkID = get_index_of_resource(mod_resources.perk, perk)
+MyPerkID = bimap_get_left(global.index_registry[mod_resources.perk], perk)
 
 // Get its string ID, for logging
-string_id = bimap_get_left(global.perks, perk)
+string_id = bimap_get_left(global.registry[mod_resources.perk], perk)
 
 mod_of_origin = ds_map_find_value(global.mod_id_to_mod_map, mod_identifier_get_namespace(string_id))
 

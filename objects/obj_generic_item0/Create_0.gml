@@ -9,10 +9,10 @@ item = get_resource_allocated_to_object(mod_resources.item, allocated_id)
 // This item struct determines how this object behaves.
 
 // Get the item's index ID
-MyItemID = get_index_of_resource(mod_resources.item, item)
+MyItemID = bimap_get_left(global.index_registry[mod_resources.item], item)
 
 // Get its string ID, for logging
-string_id = bimap_get_left(global.items, item)
+string_id = bimap_get_left(global.registry[mod_resources.item], item)
 
 mod_of_origin = ds_map_find_value(global.mod_id_to_mod_map, mod_identifier_get_namespace(string_id))
 

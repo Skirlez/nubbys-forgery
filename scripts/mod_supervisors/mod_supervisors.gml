@@ -1,14 +1,11 @@
-global.supervisors = bimap_create();
-
-
 // For catspeak
 function mod_register_supervisor(supervisor, supervisor_id, wod = global.currently_executing_mod) {
 	if !mod_is_id_component_valid(supervisor_id) {
 		log_error($"Mod {wod.mod_id} tried to register a supervisor with invalid ID {item_id}")
 		return;
 	}
-	if bimap_right_exists(global.supervisors, supervisor) {
-		var current_id = bimap_get_left(global.supervisors, supervisor)
+	if bimap_right_exists(global.registry[mod_resources.supervisor], supervisor) {
+		var current_id = bimap_get_left(global.registry[mod_resources.supervisor], supervisor)
 		log_error($"Mod {wod.mod_id} tried to register a supervisor struct with ID {supervisor_id},"
 			+ $" but this struct has already been registered prior to {current_id}! Each struct registered must be unique.")	
 		return;
@@ -18,11 +15,14 @@ function mod_register_supervisor(supervisor, supervisor_id, wod = global.current
 		display_name : "",
 		description : "",
 		sprites : {},
+		clicked_sounds : [],
+		go_sound : agi("obj_empty"),
 		name_color : int64(0),
 		cost : 0,
 		on_create : global.empty_method,
 		on_destroy : global.empty_method,
 	}
+	
 	var discompliance = get_struct_discompliance_with_contract(supervisor, supervisor_contract)
 	if array_length(discompliance.missing) > 0 || array_length(discompliance.mismatched_types) > 0 {
 		log_error($"Supervisor {supervisor_id} from {wod.mod_id} has bad variables!\n" 
@@ -32,11 +32,15 @@ function mod_register_supervisor(supervisor, supervisor_id, wod = global.current
 	}
 	
 	static sprites_contract = {
-		idle_neutral : agi("obj_empty"),
-		preview : agi("obj_empty"),
+		idle_neutral : agi("spr_empty"),
+		preview : agi("spr_empty"),
 	}
+	var preview_sprite = supervisor.sprites.preview;
 	var idle_neutral_sprite = supervisor.sprites.idle_neutral;
+	
 	var optional_sprites = {
+		preview_clicked : preview_sprite,
+		
 		angry : idle_neutral_sprite,
 		evil : idle_neutral_sprite,
 		head_swivel : idle_neutral_sprite,
@@ -66,7 +70,7 @@ function mod_register_supervisor(supervisor, supervisor_id, wod = global.current
 	initialize_missing(supervisor.sprites, optional_sprites)
 
 	var full_id = $"{wod.mod_id}:{supervisor_id}"
-	bimap_set(global.supervisors, full_id, supervisor)
+	bimap_set(global.registry[mod_resources.supervisor], full_id, supervisor)
 	array_push(wod.supervisors)
 	log_info($"Supervisor {full_id} registered");
 	return supervisor;
@@ -79,10 +83,10 @@ function register_supervisors_for_gameplay() {
 	clear_index_assignments(mod_resources.supervisor)
 	
 
-	var supervisor_ids = bimap_lefts_array(global.supervisors)
+	var supervisor_ids = bimap_lefts_array(global.registry[mod_resources.supervisor])
 	for (var i = 0; i < array_length(supervisor_ids); i++) {		
 		with (agi("obj_SupervisorMGMT")) {
-			var supervisor = bimap_get_right(global.supervisors, supervisor_ids[i])
+			var supervisor = bimap_get_right(global.registry[mod_resources.supervisor], supervisor_ids[i])
 			var supervisor_index = array_length(SuperVisorName)
 
 			SuperVisorName[supervisor_index] = agi("scr_Text")(supervisor.display_name);
@@ -91,6 +95,8 @@ function register_supervisors_for_gameplay() {
 			SuperVisorCol1[supervisor_index] = supervisor.name_color;
 			SuperVisorCol2[supervisor_index] = 255; // Unused as of now
 			SVCost[supervisor_index] = supervisor.cost;
+			SVGoAud[supervisor_index] = supervisor.go_sound;
+			SVSpriteClick[supervisor_index] = supervisor.sprites.preview_clicked;
 				
 			var obj = allocate_object(mod_resources.supervisor, supervisor)
 				
@@ -102,22 +108,21 @@ function register_supervisors_for_gameplay() {
 		}
 	}
 }
+
 // Called from gml_Object_obj_LvlMGMT_Other_4
 function create_mod_supervisor_object(index_id) {
-	var supervisor = get_resource_by_index(mod_resources.supervisor, index_id);
+	var supervisor = bimap_get_right(global.index_registry[mod_resources.supervisor], index_id);
 	if is_undefined(supervisor)
 		return; // Vanilla supervisor
 
 	var obj = supervisor.__object;
 	agi("obj_LvlMGMT").SVManager = instance_create_layer(0, 0, "GAME", obj)
-	
 }
 
 // Called from gml_Object_obj_TonyMGMT_Create_0
 function register_supervisors_sprites_for_gameplay() {
 	var index_id = agi("obj_LvlMGMT").SVID
-	
-	var supervisor = get_resource_by_index(mod_resources.supervisor, index_id);
+	var supervisor = bimap_get_right(global.index_registry[mod_resources.supervisor], index_id);
 	// We only need to register the sprites of the supervisor we're using, if we are using a modded one...
 	if is_undefined(supervisor)
 		return;
@@ -140,6 +145,16 @@ function register_supervisors_sprites_for_gameplay() {
 		TonyScreamSpr[index_id] = sprites.scream
 		TonyTalkSpr[index_id] = sprites.talk
 	}
-	var string_id = bimap_get_left(global.supervisors, supervisor)
+	var string_id = bimap_get_left(global.registry[mod_resources.supervisor], supervisor)
 	log_info($"Supervisor {string_id} sprites have been indexed: {index_id}")
+}
+
+function on_supervisor_preview_choose_clicked_audio() {
+	var supervisor = bimap_get_right(global.index_registry[mod_resources.supervisor], SVPreviewVal);
+	if is_undefined(supervisor)
+		return;
+	if (array_length(supervisor.clicked_sounds) > 0)
+		SVCurrentAu = supervisor.clicked_sounds[irandom_range(0, array_length(supervisor.clicked_sounds) - 1)]
+	else
+		SVCurrentAu = agi("snd_silence")
 }

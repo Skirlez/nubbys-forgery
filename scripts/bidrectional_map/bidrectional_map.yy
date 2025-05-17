@@ -1,7 +1,7 @@
 {
   "resourceType": "GMScript",
   "resourceVersion": "1.0",
-  "name": "bimap_functions",
+  "name": "bidrectional_map",
   "isCompatibility": false,
   "isDnD": false,
   "parent": {

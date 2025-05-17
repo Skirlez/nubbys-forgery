@@ -1,13 +1,11 @@
-global.perks = bimap_create();
-
 // For catspeak
 function mod_register_perk(perk, perk_id, wod = global.currently_executing_mod) {
 	if !mod_is_id_component_valid(perk_id) {
 		log_error($"Mod {wod.mod_id} tried to register an item with invalid ID {perk_id}")
 		return;
 	}
-	if bimap_right_exists(global.perks, perk) {
-		var current_id = bimap_get_left(global.perks, perk)
+	if bimap_right_exists(global.registry[mod_resources.perk], perk) {
+		var current_id = bimap_get_left(global.registry[mod_resources.perk], perk)
 		log_error($"Mod {wod.mod_id} tried to register a perk struct with ID {perk_id},"
 			+ $" but this struct has already been registered prior to {current_id}! Each struct registered must be unique.")
 		return;
@@ -37,7 +35,7 @@ function mod_register_perk(perk, perk_id, wod = global.currently_executing_mod) 
 	}	
 
 	var full_id = $"{wod.mod_id}:{perk_id}"
-	bimap_set(global.perks, full_id, perk)
+	bimap_set(global.registry[mod_resources.perk], full_id, perk)
 	array_push(wod.perks, perk)
 	log_info($"Perk {full_id} registered");
 	return perk;
@@ -48,9 +46,9 @@ function register_perks_for_gameplay() {
 	free_all_allocated_objects(mod_resources.perk)
 	clear_index_assignments(mod_resources.perk)
 		
-	var perk_ids = bimap_lefts_array(global.perks)
+	var perk_ids = bimap_lefts_array(global.registry[mod_resources.perk])
 	for (var i = 0; i < array_length(perk_ids); i++) {			
-		var perk = bimap_get_right(global.perks, perk_ids[i])
+		var perk = bimap_get_right(global.registry[mod_resources.perk], perk_ids[i])
 			
 		var perk_index = array_length(agi("obj_PerkMGMT").PerkID)
 

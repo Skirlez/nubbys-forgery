@@ -211,13 +211,13 @@ function unload_mod(wod) {
 	}
 	
 	for (var i = 0; i < array_length(wod.items); i++) {
-		bimap_delete_right(global.items, wod.items[i])	
+		bimap_delete_right(global.registry[mod_resources.item], wod.items[i])	
 	}
 	for (var i = 0; i < array_length(wod.perks); i++) {
-		bimap_delete_right(global.perks, wod.perks[i])	
+		bimap_delete_right(global.registry[mod_resources.perk], wod.perks[i])	
 	}
 	for (var i = 0; i < array_length(wod.supervisors); i++) {
-		bimap_delete_right(global.supervisors, wod.supervisors[i])	
+		bimap_delete_right(global.registry[mod_resources.supervisor], wod.supervisors[i])	
 	}
 	
 	var translation_keys = ds_map_keys_to_array(wod.translations)
@@ -251,9 +251,7 @@ function clear_all_mods() {
 		unload_mod(wod)
 	}
 	ds_map_clear(global.mod_id_to_mod_map)
-	bimap_clear(global.items)
-	bimap_clear(global.perks)
-	bimap_clear(global.supervisors)
+	registry_clear(global.registry)
 }
 
 
