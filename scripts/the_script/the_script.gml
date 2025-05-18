@@ -78,7 +78,7 @@ function create_mod(mod_folder_name) {
 	wod.supervisors =  []
 	//wod.foods = ds_map_create();
 	wod.sprites = ds_map_create();
-	wod.audio_streams = ds_map_create();
+	wod.sounds = ds_map_create();
 	
 	wod.game_events = [];
 	wod.callback_records = [];
@@ -184,8 +184,7 @@ function strip_initial_path_separator_character(path) {
 
 function unload_mod(wod) {
 	log_info($"Unloading mod {wod.mod_id}")
-	var main = mod_get_code_file("mod.meow", wod)
-	var main_globals = catspeak_globals(main)
+	var main_globals = mod_get_code_file_globals("mod.meow")
 	global.currently_executing_mod = wod;
 	try {
 		main_globals.on_unload();
@@ -228,15 +227,20 @@ function unload_mod(wod) {
 		
 	var sprite_keys = ds_map_keys_to_array(wod.sprites)
 	for (var i = 0; i < array_length(sprite_keys); i++) {
-		sprite_delete(ds_map_find_value(wod.sprites, sprite_keys[i]))	
+		var sprite = ds_map_find_value(wod.sprites, sprite_keys[i]);
+		if sprite >= global.sprite_count
+			sprite_delete(sprite)
 	}
 	ds_map_destroy(wod.sprites)
-		
-	var audio_stream_keys = ds_map_keys_to_array(wod.audio_streams)
-	for (var i = 0; i < array_length(audio_stream_keys); i++) {
-		audio_destroy_stream(ds_map_find_value(wod.audio_streams, audio_stream_keys[i]))	
+	
+	var sound_keys = ds_map_keys_to_array(wod.sounds)
+	for (var i = 0; i < array_length(sound_keys); i++) {
+		var sound = ds_map_find_value(wod.sounds, sound_keys[i])
+		if (sound >= global.sound_count)
+			audio_destroy_stream(sound)
 	}
-	ds_map_destroy(wod.audio_streams)
+	ds_map_destroy(wod.sounds)
+	
 	ds_map_destroy(wod.code_files)
 	
 	ds_map_delete(global.mod_id_to_mod_map, wod.mod_id);

@@ -11,6 +11,14 @@ global.logging_socket = network_create_socket(network_socket_udp)
 
 global.currently_executing_mod = noone;
 
+global.sound_count = 0;
+while (audio_exists(global.sound_count))
+	global.sound_count++;
+global.sprite_count = 0;
+while (sprite_exists(global.sprite_count))
+	global.sprite_count++;
+
+
 log_info("****************\nModloader start\n****************")
 read_all_mods()
 
@@ -19,6 +27,4 @@ if is_console_and_devmode_enabled()
 
 // prevents crash with devmode since this is for some reason set in step of an object and not in create
 global.CursTar = -1
-
-
 

@@ -40,8 +40,8 @@ Below is a list of what I want the modloader to have with a tick with what's imp
 - [x] Supervisors
 - [ ] Challenges
 - [ ] Special/Boss Rounds
-- [x] Sprite loading
-- [ ] Audio loading
+- [x] Sprite management
+- [x] Audio management
 - [x] Translations
 - [ ] Code patching/modification using launcher
 

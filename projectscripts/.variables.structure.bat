@@ -1,4 +1,4 @@
-:: These variables will be used by build.sh, copy_assets.sh and clean_assets.sh
+:: These variables will be used by build_and_merge.bat
 :: Do not include a `\` at the end of any of the variables, including when filling in folder paths.
 :: Make sure to include quotation marks around both the variable name and the value, for example: 
 :: set "VARIABLE=VALUE"
