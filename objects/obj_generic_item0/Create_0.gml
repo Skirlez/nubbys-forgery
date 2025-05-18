@@ -32,6 +32,7 @@ TrigLimit = -1
 WhatSlot = -1
 ItemQueue = ds_list_create()
 RndFireNum = 0
+PrevTurnFireNum = 0;
 GameFireNum = 0
 ItemTemporary = 0
 DisableItem = 0
