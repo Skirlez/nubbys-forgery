@@ -6,4 +6,3 @@ function clear_index_assignments(type) {
 function assign_index_to_resource(type, resource, index) {
 	bimap_set(global.index_registry[type], index, resource)
 }
-

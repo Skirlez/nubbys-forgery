@@ -1,69 +1,3 @@
-//! Responsible for the code generation stage of the Catspeak compiler.
-//!
-//! This stage converts Catspeak IR, produced by `CatspeakParser` or
-//! `CatspeakIRBuilder`, into various lower-level formats. The most
-//! interesting of these formats is the conversion of Catspeak programs into
-//! native GML functions.
-
-//# feather use syntax-errors
-
-/// @ignore
-///
-/// @param {Function} func
-/// @return {String}
-function __catspeak_infer_function_name(func) {
-    if (is_method(func)) {
-        var name = func[$ "name"];
-        if (is_string(name)) {
-            return name;
-        }
-        func = method_get_index(func);
-    }
-    return script_get_name(func);
-}
-
-/// Checks whether a value is a valid Catspeak function compiled through
-/// `CatspeakGMLCompiler`.
-///
-/// @warning
-///   Internally, this actually just checks whether the methods name starts
-///   with `__catspeak_`. Because of this, you should avoid giving your
-///   functions that prefix to prevent false positives.
-///
-/// @param {Any} value
-///   The value to check is a Catspeak function.
-///
-/// @return {Bool}
-function is_catspeak(value) {
-    if (!is_method(value)) {
-        return false;
-    }
-    var scr = method_get_index(value);
-    if (scr == __catspeak_function__) {
-        return true;
-    }
-    var scrName = script_get_name(scr);
-    return string_starts_with(scrName, "__catspeak_");
-}
-
-/// The number of microseconds before a Catspeak program times out. The
-/// default is 1 second.
-///
-/// @return {Real}
-#macro CATSPEAK_TIMEOUT 1000
-
-/// @ignore
-///
-/// @param {Real} t
-function __catspeak_timeout_check(t) {
-    gml_pragma("forceinline");
-    if (current_time - t > CATSPEAK_TIMEOUT) {
-        __catspeak_error(
-            "process exceeded allowed time of ", CATSPEAK_TIMEOUT, " ms"
-        );
-    }
-}
-
 /// Takes a reference to a Catspeak IR and converts it into a callable GML
 /// function.
 ///
@@ -79,7 +13,7 @@ function __catspeak_timeout_check(t) {
 ///
 /// @param {Struct} [interface]
 ///   The native interface to use.
-function CatspeakGMLCompiler(ir, interface=undefined) constructor {
+function GMLspeakCodegen(ir, interface=undefined) constructor {
     if (CATSPEAK_DEBUG_MODE) {
         __catspeak_check_init();
         __catspeak_check_arg_struct("ir", ir,
@@ -89,6 +23,14 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
     }
     /// @ignore
     self.interface = interface;
+        
+    // Fetching compile flags
+    /// @ignore
+    useVariableHash = (__getCompileFlag("useVariableHash") == true);
+    /// @ignore
+    checkForVariables = (__getCompileFlag("checkForVariables") == true);
+
+    
     /// @ignore
     self.functions = ir.functions;
     /// @ignore
@@ -101,7 +43,6 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
     self.program = __compileFunctions(ir.entryPoints);
     /// @ignore
     self.finalised = false;
-
     /// @ignore
     ///
     /// @param {String} name
@@ -658,6 +599,9 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
                 "type", is_numeric
             );
         }
+        
+        var isCompileTimeCallable = false;
+        var conditionFailed = false;
         var args = term.args;
         var argCount = array_length(args);
         var exprs = array_create(argCount);
@@ -674,14 +618,28 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
             }
             var collection = __compileTerm(ctx, term.callee.collection);
             var key = __compileTerm(ctx, term.callee.key);
-            return method({
+            var result = method({
                 dbgError : dbgError,
                 collection : collection,
                 key : key,
                 args : exprs,
                 shared : sharedData,
-            }, __catspeak_expr_call_method__);
-        } else {
+                }, __catspeak_expr_call_method__);
+                
+            if (checkForVariables) {
+                return method({
+                    result: result,
+                    key: key,
+                    collection: collection,
+                    hash_: useVariableHash ? variable_get_hash(term.callee.key) : -1,
+                    dbgError : __dbgTerm(term.callee.key, "is not defined."),
+                }, useVariableHash ? __gmlspeak_expr_index_check_hash__ : 
+                    __gmlspeak_expr_index_check__
+                );   
+            }
+            
+            return result;
+        } else { 
             var callee = __compileTerm(ctx, term.callee);
             var func = __catspeak_expr_call__;
             switch (array_length(exprs)) {
@@ -757,13 +715,31 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
                     "key", undefined
                 );
             }
-            var func = __assignLookupIndex[term.assignType];
-            return method({
+            var func = useVariableHash ? 
+                        __assignLookupIndexHash[term.assignType] :
+                        __assignLookupIndex[term.assignType];
+            var result = method({
                 dbgError : __dbgTerm(target.collection, "is not indexable"),
                 collection : __compileTerm(ctx, target.collection),
                 key : __compileTerm(ctx, target.key),
+                hash_ : useVariableHash ? variable_get_hash(target.key) : -1,
                 value : value,
             }, func);
+			
+			if (checkForVariables) && (term.assignType != CatspeakAssign.VANILLA) {
+				return method({
+					dbgError : __dbgTerm(target.key, "is not defined."),
+					collection : __compileTerm(ctx, target.collection),
+					key : __compileTerm(ctx, target.key),
+					hash_: useVariableHash ? variable_get_hash(target.key) : -1,
+					result: result,
+				}, useVariableHash ? 
+						__gmlspeak_expr_index_check_hash__ : 
+						__gmlspeak_expr_index_check__
+				);
+			}
+
+			return result;	
         } else if (targetType == CatspeakTerm.PROPERTY) {
             if (CATSPEAK_DEBUG_MODE) {
                 __catspeak_check_arg_struct("term.target", target,
@@ -836,11 +812,32 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
                 "key", undefined
             );
         }
-        return method({
-            dbgError : __dbgTerm(term.collection, "is not indexable"),
-            collection : __compileTerm(ctx, term.collection),
-            key : __compileTerm(ctx, term.key),
-        }, __catspeak_expr_index_get__);
+        
+        var getter = useVariableHash ? 
+            __gmlspeak_expr_index_get_hash__ : 
+            __catspeak_expr_index_get__;
+        
+        var result = method({
+                dbgError : __dbgTerm(term.collection, "is not indexable"),
+                collection : __compileTerm(ctx, term.collection),
+                key : __compileTerm(ctx, term.key),
+            }, getter);
+        
+        // Adds variable check
+        if (checkForVariables) {
+            return method({
+                dbgError : __dbgTerm(term.key, "is not defined."),
+                collection : __compileTerm(ctx, term.collection),
+                key : __compileTerm(ctx, term.key),
+                hash_: useVariableHash ? variable_get_hash(term.key) : -1,
+                result: result,
+            }, useVariableHash ? 
+                    __gmlspeak_expr_index_check_hash__ : 
+                    __gmlspeak_expr_index_check__
+                );
+        };
+        
+        return result;
     };
 
     /// @ignore
@@ -1041,6 +1038,17 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
         db[@ CatspeakAssign.PLUS] = __catspeak_expr_index_set_plus__;
         return db;
     })();
+    
+    /// @ignore
+    static __assignLookupIndexHash = (function () {
+        var db = array_create(CatspeakAssign.__SIZE__, undefined);
+        db[@ CatspeakAssign.VANILLA] = __gmlspeak_expr_index_set_hash__;
+        db[@ CatspeakAssign.MULTIPLY] = __gmlspeak_expr_index_set_mult_hash__;
+        db[@ CatspeakAssign.DIVIDE] = __gmlspeak_expr_index_set_div_hash__;
+        db[@ CatspeakAssign.SUBTRACT] = __gmlspeak_expr_index_set_sub_hash__;
+        db[@ CatspeakAssign.PLUS] = __gmlspeak_expr_index_set_plus_hash__;
+        return db;
+    })();
 
     /// @ignore
     static __assignLookupProperty = (function () {
@@ -1074,6 +1082,19 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
         db[@ CatspeakAssign.PLUS] = __catspeak_expr_global_set_plus__;
         return db;
     })();
+    
+    /// @ignore
+    static __hasCompileFlag = function(flagName) {
+        return variable_struct_exists(interface.compileFlags, flagName);   
+    }
+    
+    static __getCompileFlag = function(flagName) {
+        if (!__hasCompileFlag(flagName)) {
+            return undefined;
+        }
+        
+        return interface.compileFlags[$ flagName];   
+    }
 
     /// @ignore
     static __dbgTerm = function (term, msg="is invalid in this context") {
@@ -1092,704 +1113,43 @@ function CatspeakGMLCompiler(ir, interface=undefined) constructor {
     };
 }
 
-/// @ignore
+// @ignore
 /// @return {Any}
-function __catspeak_function__() {
-    var isRecursing = callTime >= 0;
-    var localCount = array_length(locals);
-    if (isRecursing) {
-        // catch unbound recursion
-        __catspeak_timeout_check(callTime);
-        // store the previous local variable array
-        // this will make function recursion quite expensive, but
-        // hopefully that's uncommon enough for it to not matter
-        var oldLocals = array_create(localCount);
-        array_copy(oldLocals, 0, locals, 0, localCount);
-        // store the previous argument array
-        // this requires a fair bit more work to ensure nothing 
-        // is leaked to recursive calls
-        var oldArgsCount = currentArgCount;
-        var oldArgs = array_create(oldArgsCount);
-        array_copy(oldArgs, 0, args, 0, oldArgsCount);
-        array_resize(args, argument_count);
-    } else {
-        callTime = current_time;
-    }
-    // used for params_count, to reflect current argument count
-    currentArgCount = argument_count;
-    for (var argI = argCount - 1; argI >= 0; argI -= 1) {
-        locals[@ argI] = argument[argI];
-    }
-    for(var argI = argument_count - 1; argI >= 0; argI -= 1) {
-        args[@ argI] = argument[argI];	
-    }
-    var value = undefined;
-    var throwValue = undefined;
-    var doThrowValue = false;
-    // the finally block doesn't execute sometimes if there's a `break`,
-    // `throw`, or `continue` in the try/catch blocks
-    try {
-        value = program();
-    } catch (e) {
-        if (e == global.__catspeakGmlReturnRef) {
-            value = e[0];
-        } else {
-            throwValue = e;
-            doThrowValue = true;
-        }
-    } finally {
-        if (isRecursing) {
-            // bad practice to use `localCount_` here, but it saves
-            // a tiny bit of time so I'll be a bit evil
-            //# feather disable GM2043
-            array_copy(locals, 0, oldLocals, 0, localCount);
-            // resetting arguments
-            currentArgCount = oldArgsCount;
-            array_resize(args, currentArgCount);
-            array_copy(args, 0, oldArgs, 0, currentArgCount);
-            //# feather enable GM2043
-        } else {
-            // reset the timer
-            callTime = -1;
-            // Clear locals
-            // Gone with array_resize, as it's faster to resize than to loop
-            array_resize(locals, 0);
-            array_resize(locals, localCount);
-            array_resize(args, 0);
-            array_resize(args, argCount);
+function __gmlspeak_expr_index_check__() {
+    var collection_ = collection();
+    var key_ = key();
+    if (__catspeak_is_withable(collection_)) {
+        if (!variable_struct_exists(collection_, key_)) {
+            __catspeak_error(dbgError);
         }
     }
-    if (doThrowValue) {
-        throw throwValue;
-    }
-    return value;
+    
+    return result();
 }
 
-/// @ignore
+// @ignore
 /// @return {Any}
-function __catspeak_expr_value__() {
-    return value;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_array__() {
-    //return array_map(values, function(f) { return f() });
-    var i = 0;
-    var values_ = values;
-    var n_ = n;
-    var arr = array_create(n_);
-    repeat (n_) {
-        // not sure if this is even fast
-        // but people will cry if I don't do it
-        var value = values_[i];
-        arr[@ i] = value();
-        i += 1;
+function __gmlspeak_expr_index_check_hash__() {
+    var collection_ = collection();
+    var key_ = key();
+    if (__catspeak_is_withable(collection_)) {
+        if (!struct_exists_from_hash(collection_, hash_)) {
+            __catspeak_error(dbgError);
+        }
     }
-    return arr;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_struct__() {
-    var obj = { };
-    var i = 0;
-    var values_ = values;
-    var n_ = n;
-    repeat (n_) {
-        // not sure if this is even fast
-        // but people will cry if I don't do it
-        var key = values_[i + 0];
-        var value = values_[i + 1];
-        obj[$ key()] = value();
-        i += 2;
-    }
-    return obj;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_block__() {
-    //array_foreach(stmts, function (stmt) { stmt() });
-    var i = 0;
-    var stmts_ = stmts;
-    var n_ = n;
-    repeat (n_) {
-        // not sure if this is even fast
-        // but people will cry if I don't do it
-        var expr = stmts_[i];
-        expr();
-        i += 1;
-    }
+    
     return result();
 }
 
 /// @ignore
 /// @return {Any}
-function __catspeak_expr_block_2__() {
-    _1st();
-    return _2nd();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_block_3__() {
-    _1st();
-    _2nd();
-    return _3rd();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_block_4__() {
-    _1st();
-    _2nd();
-    _3rd();
-    return _4th();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_block_5__() {
-    _1st();
-    _2nd();
-    _3rd();
-    _4th();
-    return _5th();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_if__() {
-    return condition() ? ifTrue() : undefined;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_if_else__() {
-    return condition() ? ifTrue() : ifFalse();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_catch__() {
-    var result;
-    try {
-        result = eager();
-    } catch (exValue) {
-        locals[@ idx] = exValue;
-        result = lazy();
-    }
-    return result;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_and__() {
-    return eager() && lazy();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_or__() {
-    return eager() || lazy();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_loop_while__() {
-    var callTime = ctx.callTime;
-    var condition_ = condition;
-    var body_ = body;
-    while (condition_()) {
-        __catspeak_timeout_check(callTime);
-        try {
-            body_();
-        } catch (e) {
-            if (e == global.__catspeakGmlBreakRef) {
-                return e[0];
-            } else if (e != global.__catspeakGmlContinueRef) {
-                throw e;
-            }
-        }
-    }
-    return undefined;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_loop_for__() {
-    var callTime = ctx.callTime;
-    var condition_ = condition;
-    var step_ = step;
-    var body_ = body;
-    while (condition_()) {
-        __catspeak_timeout_check(callTime);
-        try {
-            body_();
-        } catch (e) {
-            if (e == global.__catspeakGmlBreakRef) {
-                return e[0];
-            } else if (e != global.__catspeakGmlContinueRef) {
-                throw e;
-            }
-        }
-        step_();
-    }
-    return undefined;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_loop_do__() {
-    var callTime = ctx.callTime;
-    var condition_ = condition;
-    var body_ = body;
-    do {
-        __catspeak_timeout_check(callTime);
-        try {
-            body_();
-        } catch (e) {
-            if (e == global.__catspeakGmlBreakRef) {
-                return e[0];
-            } else if (e != global.__catspeakGmlContinueRef) {
-                throw e;
-            }
-        }
-    } until (!condition_());
-    return undefined;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_loop_general__() {
-    var callTime = ctx.callTime;
-    var preCondition_ = preCondition;
-    var postCondition_ = postCondition;
-    var step_ = step;
-    var body_ = body;
-    while (true) {
-        __catspeak_timeout_check(callTime);
-        if (preCondition_ != undefined && !preCondition_()) {
-            break;
-        }
-        try {
-            body_();
-        } catch (e) {
-            if (e == global.__catspeakGmlBreakRef) {
-                return e[0];
-            } else if (e != global.__catspeakGmlContinueRef) {
-                throw e;
-            }
-        }
-        if (postCondition_ != undefined && !postCondition_()) {
-            break;
-        }
-        if (step_ != undefined) {
-            step_();
-        }
-    }
-    return undefined;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_loop_with__() {
-    var body_ = body;
-    var throwValue = undefined;
-    var doThrowValue = false;
-    var returnValue = undefined;
-    var doReturnValue = false;
-    with (scope()) {
-        // the finally block doesn't execute sometimes if there's a `break`,
-        // `throw`, or `continue` in the try/catch blocks
-        __CATSPEAK_BEGIN_SELF = self;
-        try {
-            body_();
-        } catch (e) {
-            if (e == global.__catspeakGmlBreakRef) {
-                returnValue = e[0];
-                doReturnValue = true;
-            } else if (e != global.__catspeakGmlContinueRef) {
-                throwValue = e;
-                doThrowValue = true;
-            }
-        }
-        __CATSPEAK_END_SELF;
-        if (doThrowValue) {
-            throw throwValue;
-        }
-        if (doReturnValue) {
-            return returnValue;
-        }
-    }
-    return undefined;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_match__() {
-    var value_ = value();
-    var i = 0;
-    var len = array_length(arms);
-    repeat (len) {
-        var arm = arms[i];
-        // TODO :: remove this `__catspeak_is_nullish` check, try optimise it so
-        //         there's a fall-through at the end instead of returning
-        //         `undefined`
-        if (__catspeak_is_nullish(arm.condition) ||
-                value_ == arm.condition()) {
-            return arm.result();
-        }
-        i += 1;
-    }
-    return undefined; // <-- (see above)
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_while_simple__() {
-    var callTime = ctx.callTime;
-    var condition_ = condition;
-    var body_ = body;
-    while (condition_()) {
-        __catspeak_timeout_check(callTime);
-        body_();
-    }
-    return undefined;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_return__() {
-    var box = global.__catspeakGmlReturnRef;
-    box[@ 0] = value();
-    throw box;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_break__() {
-    var box = global.__catspeakGmlBreakRef;
-    box[@ 0] = value();
-    throw box;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_continue__() {
-    throw global.__catspeakGmlContinueRef;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_throw__() {
-    throw value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_op_1__() {
-    var value_ = value();
-    return op(value_);
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_op_2__() {
-    var lhs_ = lhs();
-    var rhs_ = rhs();
-    return op(lhs_, rhs_);
-}
-
-function __catspeak_script_execute_ext_fixed(callee_, args_) {
-    // LTS has issues with calling functions that have many args, so fix that here
-    var n = array_length(args_);
-    switch (n) {
-        // triangle of doom gets a free pass on line length restrictions
-        // as a treat
-        // TODO :: slow as hell
-    case 0: return callee_();
-    case 1: return callee_(args_[0]);
-    case 2: return callee_(args_[0], args_[1]);
-    case 3: return callee_(args_[0], args_[1], args_[2]);
-    case 4: return callee_(args_[0], args_[1], args_[2], args_[3]);
-    case 5: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4]);
-    case 6: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5]);
-    case 7: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6]);
-    case 8: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6], args_[7]);
-    case 9: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6], args_[7], args_[8]);
-    case 10: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6], args_[7], args_[8], args_[9]);
-    case 11: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6], args_[7], args_[8], args_[9], args_[10]);
-    case 12: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6], args_[7], args_[8], args_[9], args_[10], args_[11]);
-    case 13: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6], args_[7], args_[8], args_[9], args_[10], args_[11], args_[12]);
-    case 14: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6], args_[7], args_[8], args_[9], args_[10], args_[11], args_[12], args_[13]);
-    case 15: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6], args_[7], args_[8], args_[9], args_[10], args_[11], args_[12], args_[13], args_[14]);
-    case 16: return callee_(args_[0], args_[1], args_[2], args_[3], args_[4], args_[5], args_[6], args_[7], args_[8], args_[9], args_[10], args_[11], args_[12], args_[13], args_[14], args_[15]);
-    }
-    return script_execute_ext(callee_, args_);
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_call_method__() {
-    // TODO :: this method call stuff is crap, please figure out a better way
-    var collection_ = collection();
-    var key_ = key();
-    var callee_;
-    if (is_array(collection_)) {
-        callee_ = collection_[key_];
-        var shared_ = shared;
-        // since arrays cannot be used in with statements, let's use something else
-        collection_ = global.__catspeakGmlSelf ?? (shared_.self_ ?? shared_.globals);
-    } else if (__catspeak_is_withable(collection_)) {
-        callee_ = collection_[$ key_];
-    } else {
-        // TODO :: bad error message
-        __catspeak_error_got(dbgError, collection_);
-    }
-    if (!is_method(callee_)) {
-        __catspeak_error_got(dbgError, callee_);
-    }
-    var args_;
-    { //var args_ = array_map(args, function(f) { return f() });
-        var i = 0;
-        var values_ = args;
-        var n_ = array_length(values_);
-        args_ = array_create(n_);
-        repeat (n_) {
-            // not sure if this is even fast
-            // but people will cry if I don't do it
-            var value = values_[i];
-            args_[@ i] = value();
-            i += 1;
-        }
-    }
-    var result = undefined;
-    // a weird sharp edge here means that `__CATSPEAK_BEGIN_SELF` needs
-    // to use `catspeak_get_self`, but the actual with loop needs to use
-    // `method_get_self` (see test "get-self-method")
-    __CATSPEAK_BEGIN_SELF = catspeak_get_self(callee_) ?? collection_;
-    with (method_get_self(callee_) ?? collection_) {
-        var calleeIdx = method_get_index(callee_);
-        result = __catspeak_script_execute_ext_fixed(calleeIdx, args_);
-        break;
-    }
-    __CATSPEAK_END_SELF;
-    return result;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_call__() {
-    var callee_ = callee();
-    if (!is_method(callee_)) {
-        __catspeak_error_got(dbgError, callee_);
-    }
-    var args_;
-    { //var args_ = array_map(args, function(f) { return f() });
-        var i = 0;
-        var values_ = args;
-        var n_ = array_length(values_);
-        args_ = array_create(n_);
-        repeat (n_) {
-            // not sure if this is even fast
-            // but people will cry if I don't do it
-            var value = values_[i];
-            args_[@ i] = value();
-            i += 1;
-        }
-    }
-    var shared_ = shared;
-    with (method_get_self(callee_) ?? 
-        (shared_.self_ ?? (global.__catspeakGmlSelf ?? shared_.globals))
-    ) {
-        var calleeIdx = method_get_index(callee_);
-        return __catspeak_script_execute_ext_fixed(calleeIdx, args_);
-    }
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_call_0__() {
-    var callee_ = callee();
-    if (!is_method(callee_)) {
-        __catspeak_error_got(dbgError, callee_);
-    }
-    var shared_ = shared;
-	
-    if (method_get_self(callee_) != undefined) {
-        return callee_();
-    }
-	
-    with (shared_.self_ ?? (global.__catspeakGmlSelf ?? shared_.globals)) {
-        var calleeIdx = method_get_index(callee_);
-        return calleeIdx();
-    }
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_call_1__() {
-    var callee_ = callee();
-    if (!is_method(callee_)) {
-        __catspeak_error_got(dbgError, callee_);
-    }
-    var values_ = args;
-    var arg1 = values_[0]();
-    var shared_ = shared;
-	
-    if (method_get_self(callee_) != undefined) {
-        return callee_(arg1);
-    }
-	
-    with (shared_.self_ ?? (global.__catspeakGmlSelf ?? shared_.globals)) {
-        var calleeIdx = method_get_index(callee_);
-        return calleeIdx(arg1);
-    }
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_call_2__() {
-    var callee_ = callee();
-    if (!is_method(callee_)) {
-        __catspeak_error_got(dbgError, callee_);
-    }
-    var values_ = args;
-    var arg1 = values_[0]();
-    var arg2 = values_[1]();
-    var shared_ = shared;
-	
-    if (method_get_self(callee_) != undefined) {
-        return callee_(arg1, arg2);
-    }
-	
-    with (shared_.self_ ?? (global.__catspeakGmlSelf ?? shared_.globals)) {
-        var calleeIdx = method_get_index(callee_);
-        return calleeIdx(arg1, arg2);
-    }
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_call_3__() {
-    var callee_ = callee();
-    if (!is_method(callee_)) {
-        __catspeak_error_got(dbgError, callee_);
-    }
-    var values_ = args;
-    var arg1 = values_[0]();
-    var arg2 = values_[1]();
-    var arg3 = values_[2]();
-    var shared_ = shared;
-	
-    if (method_get_self(callee_) != undefined) {
-        return callee_(arg1, arg2, arg3);
-    }
-	
-    with (shared_.self_ ?? (global.__catspeakGmlSelf ?? shared_.globals)) {
-        var calleeIdx = method_get_index(callee_);
-        return calleeIdx(arg1, arg2, arg3);
-    }
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_call_4__() {
-    var callee_ = callee();
-    if (!is_method(callee_)) {
-        __catspeak_error_got(dbgError, callee_);
-    }
-    var values_ = args;
-    var arg1 = values_[0]();
-    var arg2 = values_[1]();
-    var arg3 = values_[2]();
-    var arg4 = values_[3]();
-    var shared_ = shared;
-
-    if (method_get_self(callee_) != undefined) {
-        return callee_(arg1, arg2, arg3, arg4);
-    }
-
-    with (shared_.self_ ?? (global.__catspeakGmlSelf ?? shared_.globals)) {
-        var calleeIdx = method_get_index(callee_);
-        return calleeIdx(arg1, arg2, arg3, arg4);
-    }
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_call_5__() {
-    var callee_ = callee();
-    if (!is_method(callee_)) {
-        __catspeak_error_got(dbgError, callee_);
-    }
-    var values_ = args;
-    var arg1 = values_[0]();
-    var arg2 = values_[1]();
-    var arg3 = values_[2]();
-    var arg4 = values_[3]();
-    var arg5 = values_[4]();
-    var shared_ = shared;
-
-    if (method_get_self(callee_) != undefined) {
-        return callee_(arg1, arg2, arg3, arg4, arg5);
-    }
-
-    with (shared_.self_ ?? (global.__catspeakGmlSelf ?? shared_.globals)) {
-        var calleeIdx = method_get_index(callee_);
-        return calleeIdx(arg1, arg2, arg3, arg4, arg5);
-    }
-}
-
-
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_call_new__() {
-    var callee_ = callee();
-    if (!is_method(callee_)) {
-        __catspeak_error_got(dbgError, callee_);
-    }
-    // TODO :: optimise :: SUPER SLOW, DO THIS AT COMPILE TIME
-    var args_ = args;
-    switch (array_length(args_)) {
-        // triangle of doom gets a free pass on line length restrictions
-        // as a treat
-    case 0: return new callee_();
-    case 1: return new callee_(args_[0]());
-    case 2: return new callee_(args_[0](), args_[1]());
-    case 3: return new callee_(args_[0](), args_[1](), args_[2]());
-    case 4: return new callee_(args_[0](), args_[1](), args_[2](), args_[3]());
-    case 5: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4]());
-    case 6: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5]());
-    case 7: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6]());
-    case 8: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6](), args_[7]());
-    case 9: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6](), args_[7](), args_[8]());
-    case 10: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6](), args_[7](), args_[8](), args_[9]());
-    case 11: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6](), args_[7](), args_[8](), args_[9](), args_[10]());
-    case 12: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6](), args_[7](), args_[8](), args_[9](), args_[10](), args_[11]());
-    case 13: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6](), args_[7](), args_[8](), args_[9](), args_[10](), args_[11](), args_[12]());
-    case 14: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6](), args_[7](), args_[8](), args_[9](), args_[10](), args_[11](), args_[12](), args_[13]());
-    case 15: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6](), args_[7](), args_[8](), args_[9](), args_[10](), args_[11](), args_[12](), args_[13](), args_[14]());
-    case 16: return new callee_(args_[0](), args_[1](), args_[2](), args_[3](), args_[4](), args_[5](), args_[6](), args_[7](), args_[8](), args_[9](), args_[10](), args_[11](), args_[12](), args_[13](), args_[14](), args_[15]());
-    default:
-        __catspeak_error_got(
-            "cannot exceed 16 arguments in 'new' expression"
-        );
-    }
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_index_get__() {
+function __gmlspeak_expr_index_get_hash__() {
     var collection_ = collection();
     var key_ = key();
     if (is_array(collection_)) {
         return collection_[key_];
     } else if (__catspeak_is_withable(collection_)) {
-        return collection_[$ key_];
+        return struct_get_from_hash(collection_, hash_);
     } else {
         __catspeak_error_got(dbgError, collection_);
     }
@@ -1797,7 +1157,7 @@ function __catspeak_expr_index_get__() {
 
 /// @ignore
 /// @return {Any}
-function __catspeak_expr_index_set__() {
+function __gmlspeak_expr_index_set_hash__() {
     var collection_ = collection();
     var key_ = key();
     var value_ = value();
@@ -1809,7 +1169,7 @@ function __catspeak_expr_index_set__() {
             specialSet(collection_, value_);
             return;
         }
-        collection_[$ key_] = value_;
+        struct_set_from_hash(collection_, hash_, value_);
     } else {
         __catspeak_error_got(dbgError, collection_);
     }
@@ -1817,7 +1177,7 @@ function __catspeak_expr_index_set__() {
 
 /// @ignore
 /// @return {Any}
-function __catspeak_expr_index_set_mult__() {
+function __gmlspeak_expr_index_set_mult_hash__() {
     var collection_ = collection();
     var key_ = key();
     var value_ = value();
@@ -1826,10 +1186,10 @@ function __catspeak_expr_index_set_mult__() {
     } else if (__catspeak_is_withable(collection_)) {
         var specialSet = global.__catspeakGmlSpecialVars[$ key_];
         if (specialSet != undefined) {
-            specialSet(collection_, collection_[$ key_] * value_);
+            specialSet(collection_, __gmlspeak_expr_index_get_hash__() * value_);
             return;
         }
-        collection_[$ key_] *= value_;
+        struct_set_from_hash(collection_, hash_, __gmlspeak_expr_index_get_hash__() * value_);
     } else {
         __catspeak_error_got(dbgError, collection_);
     }
@@ -1837,7 +1197,7 @@ function __catspeak_expr_index_set_mult__() {
 
 /// @ignore
 /// @return {Any}
-function __catspeak_expr_index_set_div__() {
+function __gmlspeak_expr_index_set_div_hash__() {
     var collection_ = collection();
     var key_ = key();
     var value_ = value();
@@ -1846,10 +1206,10 @@ function __catspeak_expr_index_set_div__() {
     } else if (__catspeak_is_withable(collection_)) {
         var specialSet = global.__catspeakGmlSpecialVars[$ key_];
         if (specialSet != undefined) {
-            specialSet(collection_, collection_[$ key_] / value_);
+            specialSet(collection_, __gmlspeak_expr_index_get_hash__() / value_);
             return;
         }
-        collection_[$ key_] /= value_;
+        struct_set_from_hash(collection_, hash_, __gmlspeak_expr_index_get_hash__() / value_);
     } else {
         __catspeak_error_got(dbgError, collection_);
     }
@@ -1857,7 +1217,7 @@ function __catspeak_expr_index_set_div__() {
 
 /// @ignore
 /// @return {Any}
-function __catspeak_expr_index_set_sub__() {
+function __gmlspeak_expr_index_set_sub_hash__() {
     var collection_ = collection();
     var key_ = key();
     var value_ = value();
@@ -1866,10 +1226,10 @@ function __catspeak_expr_index_set_sub__() {
     } else if (__catspeak_is_withable(collection_)) {
         var specialSet = global.__catspeakGmlSpecialVars[$ key_];
         if (specialSet != undefined) {
-            specialSet(collection_, collection_[$ key_] - value_);
+            specialSet(collection_, __gmlspeak_expr_index_get_hash__() - value_);
             return;
         }
-        collection_[$ key_] -= value_;
+        struct_set_from_hash(collection_, hash_, __gmlspeak_expr_index_get_hash__() - value_);
     } else {
         __catspeak_error_got(dbgError, collection_);
     }
@@ -1877,7 +1237,7 @@ function __catspeak_expr_index_set_sub__() {
 
 /// @ignore
 /// @return {Any}
-function __catspeak_expr_index_set_plus__() {
+function __gmlspeak_expr_index_set_plus_hash__() {
     var collection_ = collection();
     var key_ = key();
     var value_ = value();
@@ -1886,282 +1246,11 @@ function __catspeak_expr_index_set_plus__() {
     } else if (__catspeak_is_withable(collection_)) {
         var specialSet = global.__catspeakGmlSpecialVars[$ key_];
         if (specialSet != undefined) {
-            specialSet(collection_, collection_[$ key_] + value_);
+            specialSet(collection_, __gmlspeak_expr_index_get_hash__() + value_);
             return;
         }
-        collection_[$ key_] += value_;
+        struct_set_from_hash(collection_, hash_, __gmlspeak_expr_index_get_hash__() + value_);
     } else {
         __catspeak_error_got(dbgError, collection_);
     }
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_property_get__() {
-    var property_ = property();
-    if (!is_method(property_)) {
-        __catspeak_error_got(dbgError, property_);
-    }
-    return property_();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_property_set__() {
-    var property_ = property();
-    var value_ = value();
-    if (!is_method(property_)) {
-        __catspeak_error_got(dbgError, property_);
-    }
-    return property_(value_);
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_property_set_mult__() {
-    var property_ = property();
-    var value_ = value();
-    if (!is_method(property_)) {
-        __catspeak_error_got(dbgError, property_);
-    }
-    return property_(property_() * value_);
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_property_set_div__() {
-    var property_ = property();
-    var value_ = value();
-    if (!is_method(property_)) {
-        __catspeak_error_got(dbgError, property_);
-    }
-    return property_(property_() / value_);
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_property_set_sub__() {
-    var property_ = property();
-    var value_ = value();
-    if (!is_method(property_)) {
-        __catspeak_error_got(dbgError, property_);
-    }
-    return property_(property_() - value_);
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_property_set_plus__() {
-    var property_ = property();
-    var value_ = value();
-    if (!is_method(property_)) {
-        __catspeak_error_got(dbgError, property_);
-    }
-    return property_(property_() + value_);
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_global_get__() {
-    return shared.globals[$ name];
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_global_set__() {
-    shared.globals[$ name] = value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_global_set_mult__() {
-    shared.globals[$ name] *= value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_global_set_div__() {
-    shared.globals[$ name] /= value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_global_set_sub__() {
-    shared.globals[$ name] -= value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_global_set_plus__() {
-    shared.globals[$ name] += value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_local_get__() {
-    return locals[idx];
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_local_set__() {
-    locals[@ idx] = value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_local_set_mult__() {
-    locals[@ idx] *= value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_local_set_div__() {
-    locals[@ idx] /= value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_local_set_sub__() {
-    locals[@ idx] -= value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_local_set_plus__() {
-    locals[@ idx] += value();
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_self__() {
-    // will either access a user-defined self instance, or the internal
-    // global struct
-    return self_ ?? (global.__catspeakGmlSelf ?? globals);
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_other__() {
-    return global.__catspeakGmlOther ?? globals;
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_params_get__() {
-    var key_ = key();
-    return args[key_];
-}
-
-/// @ignore
-/// @return {Any}
-function __catspeak_expr_params_count_get__() {
-    return currentArgCount;
-}
-
-/// @ignore
-function __catspeak_init_codegen() {
-    /// @ignore
-    global.__catspeakGmlReturnRef = [undefined];
-    /// @ignore
-    global.__catspeakGmlBreakRef = [undefined];
-    /// @ignore
-    global.__catspeakGmlContinueRef = [];
-    /// @ignore
-    global.__catspeakGmlSelf = undefined;
-    /// @ignore
-    global.__catspeakGmlOther = undefined;
-    /// @ignore
-    global.__catspeakGmlSpecialVars = { };
-    var db = global.__catspeakGmlSpecialVars;
-    // addresses an LTS bug where self[$ name] = val doesn't work for internal properties
-    db[$ "enabled"] = function (s, v) { s.enabled = v };
-    db[$ "left"] = function (s, v) { s.left = v };
-    db[$ "right"] = function (s, v) { s.right = v };
-    db[$ "top"] = function (s, v) { s.top = v };
-    db[$ "bottom"] = function (s, v) { s.bottom = v };
-    db[$ "tilemode"] = function (s, v) { s.tilemode = v };
-    db[$ "frame"] = function (s, v) { s.frame = v };
-    db[$ "length"] = function (s, v) { s.length = v };
-    db[$ "stretch"] = function (s, v) { s.stretch = v };
-    db[$ "channels"] = function (s, v) { s.channels = v };
-    db[$ "channel"] = function (s, v) { s.channel = v };
-    db[$ "sequence"] = function (s, v) { s.sequence = v };
-    db[$ "headPosition"] = function (s, v) { s.headPosition = v };
-    db[$ "headDirection"] = function (s, v) { s.headDirection = v };
-    db[$ "speedScale"] = function (s, v) { s.speedScale = v };
-    db[$ "volume"] = function (s, v) { s.volume = v };
-    db[$ "paused"] = function (s, v) { s.paused = v };
-    db[$ "finished"] = function (s, v) { s.finished = v };
-    db[$ "activeTracks"] = function (s, v) { s.activeTracks = v };
-    db[$ "elementID"] = function (s, v) { s.elementID = v };
-    db[$ "name"] = function (s, v) { s.name = v };
-    db[$ "loopmode"] = function (s, v) { s.loopmode = v };
-    db[$ "playbackSpeed"] = function (s, v) { s.playbackSpeed = v };
-    db[$ "playbackSpeedType"] = function (s, v) { s.playbackSpeedType = v };
-    db[$ "xorigin"] = function (s, v) { s.xorigin = v };
-    db[$ "yorigin"] = function (s, v) { s.yorigin = v };
-    db[$ "tracks"] = function (s, v) { s.tracks = v };
-    db[$ "messageEventKeyframes"] = function (s, v) { s.messageEventKeyframes = v };
-    db[$ "momentKeyframes"] = function (s, v) { s.momentKeyframes = v };
-    db[$ "event_create"] = function (s, v) { s.event_create = v };
-    db[$ "event_destroy"] = function (s, v) { s.event_destroy = v };
-    db[$ "event_clean_up"] = function (s, v) { s.event_clean_up = v };
-    db[$ "event_step"] = function (s, v) { s.event_step = v };
-    db[$ "event_step_begin"] = function (s, v) { s.event_step_begin = v };
-    db[$ "event_step_end"] = function (s, v) { s.event_step_end = v };
-    db[$ "event_async_system"] = function (s, v) { s.event_async_system = v };
-    db[$ "event_broadcast_message"] = function (s, v) { s.event_broadcast_message = v };
-    db[$ "type"] = function (s, v) { s.type = v };
-    db[$ "subType"] = function (s, v) { s.subType = v };
-    db[$ "traits"] = function (s, v) { s.traits = v };
-    db[$ "interpolation"] = function (s, v) { s.interpolation = v };
-    db[$ "visible"] = function (s, v) { s.visible = v };
-    db[$ "linked"] = function (s, v) { s.linked = v };
-    db[$ "linkedTrack"] = function (s, v) { s.linkedTrack = v };
-    db[$ "keyframes"] = function (s, v) { s.keyframes = v };
-    db[$ "disabled"] = function (s, v) { s.disabled = v };
-    db[$ "spriteIndex"] = function (s, v) { s.spriteIndex = v };
-    db[$ "soundIndex"] = function (s, v) { s.soundIndex = v };
-    db[$ "emitterIndex"] = function (s, v) { s.emitterIndex = v };
-    db[$ "playbackMode"] = function (s, v) { s.playbackMode = v };
-    db[$ "imageIndex"] = function (s, v) { s.imageIndex = v };
-    db[$ "value"] = function (s, v) { s.value = v };
-    db[$ "colour"] = function (s, v) { s.colour = v };
-    db[$ "color"] = function (s, v) { s.color = v };
-    db[$ "curve"] = function (s, v) { s.curve = v };
-    db[$ "objectIndex"] = function (s, v) { s.objectIndex = v };
-    db[$ "text"] = function (s, v) { s.text = v };
-    db[$ "events"] = function (s, v) { s.events = v };
-    db[$ "event"] = function (s, v) { s.event = v };
-    db[$ "graphType"] = function (s, v) { s.graphType = v };
-    db[$ "iterations"] = function (s, v) { s.iterations = v };
-    db[$ "points"] = function (s, v) { s.points = v };
-    db[$ "posx"] = function (s, v) { s.posx = v };
-    db[$ "matrix"] = function (s, v) { s.matrix = v };
-    db[$ "posy"] = function (s, v) { s.posy = v };
-    db[$ "rotation"] = function (s, v) { s.rotation = v };
-    db[$ "scalex"] = function (s, v) { s.scalex = v };
-    db[$ "scaley"] = function (s, v) { s.scaley = v };
-    db[$ "gain"] = function (s, v) { s.gain = v };
-    db[$ "pitch"] = function (s, v) { s.pitch = v };
-    db[$ "width"] = function (s, v) { s.width = v };
-    db[$ "height"] = function (s, v) { s.height = v };
-    db[$ "imagespeed"] = function (s, v) { s.imagespeed = v };
-    db[$ "colormultiply"] = function (s, v) { s.colormultiply = v };
-    db[$ "colourmultiply"] = function (s, v) { s.colourmultiply = v };
-    db[$ "coloradd"] = function (s, v) { s.coloradd = v };
-    db[$ "colouradd"] = function (s, v) { s.colouradd = v };
-    db[$ "instanceID"] = function (s, v) { s.instanceID = v };
-    db[$ "track"] = function (s, v) { s.track = v };
-    db[$ "parent"] = function (s, v) { s.parent = v };
-    db[$ "objects_touched"] = function (s, v) { s.objects_touched = v };
-    db[$ "objects_collected"] = function (s, v) { s.objects_collected = v };
-    db[$ "traversal_time"] = function (s, v) { s.traversal_time = v };
-    db[$ "collection_time"] = function (s, v) { s.collection_time = v };
-    db[$ "gc_frame"] = function (s, v) { s.gc_frame = v };
-    db[$ "generation_collected"] = function (s, v) { s.generation_collected = v };
-    db[$ "num_generations"] = function (s, v) { s.num_generations = v };
-    db[$ "num_objects_in_generation"] = function (s, v) { s.num_objects_in_generation = v };
-    db[$ "ref"] = function (s, v) { s.ref = v };
 }

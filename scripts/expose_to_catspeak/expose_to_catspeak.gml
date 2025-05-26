@@ -1,4 +1,9 @@
-function expose_to_catspeak() {
+#macro GMLspeak global.__GMLspeak__
+function initialize_catspeak_gmlspeak() {
+	catspeak_force_init();
+	global.__GMLspeak__ = new GMLspeakEnvironment();
+	
+	
 	// One of the goals of this project is to not limit what mods can do.
 	// The worst thing enabling this can do is allow mods to delete saved scores,
 	// but since scores are saved in a different folder, and GameMaker has a sandboxed filesystem,
@@ -6,6 +11,10 @@ function expose_to_catspeak() {
 	
 	// (This causes an Ubuntu crash. IDK why. The real game is on proton on steam anyways so who cares.)
 	Catspeak.interface.exposeEverythingIDontCareIfModdersCanEditUsersSaveFilesJustLetMeDoThis = true;
+	GMLspeak.interface.exposeEverythingIDontCareIfModdersCanEditUsersSaveFilesJustLetMeDoThis = true;
+
+	GMLspeak.interface.compileFlags.checkForVariables = true;
+
 }
 
 // since alarm is a fake array it doesn't work in catspeak, so i've made these functions to help
@@ -16,3 +25,4 @@ function alarm_get_instance(instance, number) {
 function alarm_set_instance(instance, number, count) {
 	instance.alarm[number] = count;
 }
+	

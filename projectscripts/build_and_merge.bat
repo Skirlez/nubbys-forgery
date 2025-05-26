@@ -35,8 +35,8 @@ if not exist "%NNF_PATH%\clean_data.win" (
 	)
 )
 
-set IGOR_PATH=%GAMEMAKER_CACHE_PATH%\runtimes\runtime-2023.8.2.152\bin\igor\windows\x64\Igor.exe
-set RUNTIME_PATH=%GAMEMAKER_CACHE_PATH%\runtimes\runtime-2023.8.2.152
+set IGOR_PATH=%GAMEMAKER_CACHE_PATH%\runtimes\runtime-2023.11.1.160\bin\igor\windows\x64\Igor.exe
+set RUNTIME_PATH=%GAMEMAKER_CACHE_PATH%\runtimes\runtime-2023.11.1.160
 
 if exist "data.win" (
 	echo Removing old data.win

@@ -50,8 +50,8 @@ if [ ! -f "$NNF_PATH/clean_data.win" ]; then
 fi
 
 
-IGOR_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.8.2.152/bin/igor/linux/x64/Igor"
-RUNTIME_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.8.2.152"
+IGOR_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.11.1.160/bin/igor/linux/x64/Igor"
+RUNTIME_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.11.1.160"
 
 if [ -f "./data.win" ]; then
   echo "Removing old data.win"

@@ -5,7 +5,7 @@ function mod_register_item(item, item_id, wod = global.currently_executing_mod) 
 		return;
 	}
 	if bimap_right_exists(global.registry[mod_resources.item], item) {
-		var current_id = bimap_get_left(global.registry[mod_resources.perk], item)
+		var current_id = bimap_get_left(global.registry[mod_resources.item], item)
 		log_error($"Mod {wod.mod_id} tried to register an item struct with ID {item_id},"
 			+ $" but this struct has already been registered prior to {current_id}! Each struct registered must be unique.")	
 		return;
@@ -49,19 +49,13 @@ function mod_register_item(item, item_id, wod = global.currently_executing_mod) 
 	var full_id = $"{wod.mod_id}:{item_id}"
 	
 	bimap_set(global.registry[mod_resources.item], full_id, item)
-	array_push(wod.perks, item)
+	array_push(wod.items, item)
 	
 	log_info($"Item {full_id} registered");
 	return item;
 }
 
 
-function remove_file_extension(name) {
-	var arr = string_split(name, ".", true, 1)
-	if array_length(arr) == 0
-		return name
-	return arr[0]
-}
 
 
 // called from gml_Object_obj_ItemMGMT_Create_0

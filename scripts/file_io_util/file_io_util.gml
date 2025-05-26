@@ -19,3 +19,30 @@ function get_all_directories(dir) {
 	file_find_close(); 
 	return directories;
 }
+
+
+function remove_file_extension(name) {
+	var arr = string_split(name, ".", true, 1)
+	if array_length(arr) == 0
+		return name
+	return arr[0]
+}
+function get_file_extension(name) {
+	var arr = string_split(name, ".", true)
+	if array_length(arr) == 0
+		return ""
+	return arr[array_length(arr) - 1];
+}
+
+enum code_file_types {
+	gml,
+	catspeak,
+}
+
+function mod_get_code_file_type(path) {
+	var extension = get_file_extension(path)
+	if extension == "meow"
+		return code_file_types.catspeak;
+	else
+		return code_file_types.gml;
+}

@@ -63,7 +63,7 @@
 /// Updated before every new release.
 ///
 /// @return {String}
-#macro CATSPEAK_VERSION "3.3.0"
+#macro CATSPEAK_VERSION "3.2.0"
 
 /// Determines whether sanity checks and unsafe developer features are enabled
 /// at runtime.
@@ -307,14 +307,8 @@ function catspeak_location_get_column(location) {
 /// @ignore
 ///
 /// @param {Real} pos
-/// @param {String} filepath
-function __catspeak_location_show(location, filepath) {
-    var msg = "in ";
-    if (filepath != undefined) {
-        msg += string(filepath);
-    } else {
-        msg += "a file";
-    }
+function __catspeak_location_show(location) {
+    var msg = "in a file";
     if (location != undefined) {
         msg += " at (line " + 
                 __catspeak_string(catspeak_location_get_row(location)) +
@@ -328,11 +322,11 @@ function __catspeak_location_show(location, filepath) {
 /// @ignore
 ///
 /// @param {Real} pos
-function __catspeak_location_show_ext(location, filepath) {
-    var msg = __catspeak_location_show(location, filepath);
-    if (argument_count > 2) {
+function __catspeak_location_show_ext(location) {
+    var msg = __catspeak_location_show(location);
+    if (argument_count > 1) {
         msg += " -- ";
-        for (var i = 2; i < argument_count; i += 1) {
+        for (var i = 1; i < argument_count; i += 1) {
             msg += __catspeak_string(argument[i]);
         }
     }
@@ -351,24 +345,11 @@ function __catspeak_is_withable(val) {
     if (is_struct(val) || val == self || val == other) {
         return true;
     }
-    // for non-LTS versions
-    //if (is_handle(val) && (object_exists(val) || instance_exists(val)) {
-    //    return true;
-    //}
-    if (is_numeric(val)) {
-        // LTS-specific checks for numeric ids
-        if (val < 0) {
-            return false; // prevent accessing special instances like -5 or -3
-        }
-        var isInst = false;
-        try {
-            //isInst = !object_exists(val) && instance_exists(val);
-            isInst = object_exists(val) || instance_exists(val);
-        } catch (_) { }
-        return isInst;
-    }
-    var type_ = typeof(val);
-    return type_ == "struct" || type_ == "ref" && (object_exists(val) || instance_exists(val));
+    var isInst = false;
+    try {
+        isInst = !object_exists(val) && instance_exists(val);
+    } catch (_) { }
+    return isInst;
 }
 
 /// @ignore

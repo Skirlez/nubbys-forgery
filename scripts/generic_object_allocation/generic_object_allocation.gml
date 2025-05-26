@@ -11,7 +11,7 @@ function allocate_object(type, resource) {
 function free_all_allocated_objects(type) {
 	global.allocated_objects[type] = []
 }
-function get_resource_allocated_to_object(type, num) {
+	function get_resource_allocated_to_object(type, num) {
 	return global.allocated_objects[type][num]
 }
 

@@ -144,66 +144,7 @@ function CatspeakParser(lexer, builder) constructor {
             peeked = lexer.peek();
             var value = __parseExpression();
             return ir.createThrow(value, lexer.getLocation());
-        } else {
-            return __parseAssign();
-        }
-    };
-
-    /// @ignore
-    ///
-    /// @return {Struct}
-    static __parseAssign = function () {
-        var lhs = __parseCatch();
-        var peeked = lexer.peek();
-        if (
-            peeked == CatspeakToken.ASSIGN ||
-            peeked == CatspeakToken.ASSIGN_MULTIPLY ||
-            peeked == CatspeakToken.ASSIGN_DIVIDE ||
-            peeked == CatspeakToken.ASSIGN_SUBTRACT ||
-            peeked == CatspeakToken.ASSIGN_PLUS
-        ) {
-            lexer.next();
-            var assignType = __catspeak_operator_assign_from_token(peeked);
-            lhs = ir.createAssign(
-                assignType,
-                lhs,
-                __parseExpression(),
-                lexer.getLocation()
-            );
-        }
-        return lhs;
-    };
-    
-    /// @ignore
-    ///
-    /// @return {Struct}
-    static __parseCatch = function () {
-        var result = __parseExpressionBlock();
-        while (true) {
-            if (lexer.peek() == CatspeakToken.CATCH) {
-                lexer.next();
-                ir.pushBlock();
-                var localRef = undefined;
-                if (lexer.peek() == CatspeakToken.IDENT) {
-                    lexer.next();
-                    var localName = lexer.getValue();
-                    localRef = ir.allocLocal(localName, lexer.getLocation());
-                }
-                __parseStatements("catch");
-                var catchBlock_ = ir.popBlock();
-                result = ir.createCatch(result, catchBlock_, localRef, lexer.getLocation());
-            } else {
-                return result;
-            }
-        }
-    };
-
-    /// @ignore
-    ///
-    /// @return {Struct}
-    static __parseExpressionBlock = function () {
-        var peeked = lexer.peek();
-        if (peeked == CatspeakToken.DO) {
+        } else if (peeked == CatspeakToken.DO) {
             lexer.next();
             ir.pushBlock(true);
             __parseStatements("do");
@@ -296,7 +237,54 @@ function CatspeakParser(lexer, builder) constructor {
     ///
     /// @return {Struct}
     static __parseCondition = function () {
-        return __parseOpLogicalOR();
+        return __parseAssign();
+    };
+
+    /// @ignore
+    ///
+    /// @return {Struct}
+    static __parseAssign = function () {
+        var lhs = __parseCatch();
+        var peeked = lexer.peek();
+        if (
+            peeked == CatspeakToken.ASSIGN ||
+            peeked == CatspeakToken.ASSIGN_MULTIPLY ||
+            peeked == CatspeakToken.ASSIGN_DIVIDE ||
+            peeked == CatspeakToken.ASSIGN_SUBTRACT ||
+            peeked == CatspeakToken.ASSIGN_PLUS
+        ) {
+            lexer.next();
+            var assignType = __catspeak_operator_assign_from_token(peeked);
+            lhs = ir.createAssign(
+                assignType,
+                lhs,
+                __parseExpression(),
+                lexer.getLocation()
+            );
+        }
+        return lhs;
+    };
+    
+    /// @ignore
+    ///
+    /// @return {Struct}
+    static __parseCatch = function () {
+        var result = __parseOpLogicalOR();
+        var peeked = lexer.peek();
+        if (peeked == CatspeakToken.CATCH) {
+            lexer.next();
+            ir.pushBlock();
+            var localRef = undefined;
+            if (lexer.next() == CatspeakToken.IDENT) {
+                var localName = lexer.getValue();
+                localRef = ir.allocLocal(localName, lexer.getLocation());
+            }
+            __parseStatements("catch");
+            var catchBlock_ = ir.popBlock();
+            return ir.createCatch(result, catchBlock_, localRef, lexer.getLocation());
+        } else {
+            return result;
+        }
     };
 
     /// @ignore
@@ -689,7 +677,7 @@ function CatspeakParser(lexer, builder) constructor {
     ///
     /// @param {String} ...
     static __ex = function () {
-        var dbg = __catspeak_location_show(lexer.getLocation(), ir.filepath) + " when parsing";
+        var dbg = __catspeak_location_show(lexer.getLocation()) + " when parsing";
         if (argument_count < 1) {
             __catspeak_error(dbg);
         } else {

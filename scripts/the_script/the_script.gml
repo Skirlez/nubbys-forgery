@@ -30,7 +30,7 @@ function create_mod(mod_folder_name) {
 		target_modloader_version : 0,
 		entrypoint_path : "",
 		translations_path : "",
-		compile_all_code_on_load : 0 // gets parsed as number, despite being boolean.
+		compile_all_code_on_load : false
 	}
 	
 	var discompliance = get_struct_discompliance_with_contract(wod, mod_contract)
@@ -89,10 +89,17 @@ function create_mod(mod_folder_name) {
 
 
 function compile_all_files_in_path_recursively(path, map, wod) {
+	var type = mod_get_code_file_type(path)
 	var files = get_all_files(path, ".meow")
 	for (var i = 0; i < array_length(files); i++) {
 		var buffer = buffer_load($"{path}{files[i]}.meow")
-		var ir = Catspeak.parse(buffer);
+		
+		var ir;
+		if type == code_file_types.gml
+			ir = GMLspeak.parse(buffer)
+		else if type == code_file_types.catspeak
+			ir = Catspeak.parse(buffer);
+			
 		var main = Catspeak.compile(ir);
 		ds_map_add(map, files[i], main)
 	}
@@ -109,8 +116,13 @@ function compile_all_files_in_path_recursively(path, map, wod) {
 
 // For catspeak use
 function mod_execute_code_file(path, wod = global.currently_executing_mod) {
-	var code = mod_get_code_file(path, wod)
-	code();
+	try {
+		var code = mod_get_code_file(path, wod)
+		code();
+	}
+	catch (e) {
+		log_error($"While calling mod_execute_code_file: " + e)	
+	}
 }
 // For catspeak use
 function mod_get_code_file_globals(path, wod = global.currently_executing_mod) {
@@ -130,6 +142,7 @@ Probably should rewrite this to do that.
 
 // For gamemaker and catspeak use
 function mod_get_code_file(path, wod = global.currently_executing_mod) {
+	var type = mod_get_code_file_type(path);
 	var path_arr = string_split(path, "/", true)
 	var current_thing = wod.code_files
 	var current_full_directory = $"{global.mods_directory}/{wod.folder_name}";
@@ -152,9 +165,18 @@ function mod_get_code_file(path, wod = global.currently_executing_mod) {
 				if !file_exists($"{current_full_directory}/{new_location}")
 					throw error_message;
 				var buffer = buffer_load($"{current_full_directory}/{new_location}")
+				var main;
 				try {
-					var ir = Catspeak.parse(buffer);
-					var main = Catspeak.compile(ir);
+					var ir;
+					if type == code_file_types.gml {
+						ir = GMLspeak.parse(buffer)
+						main = GMLspeak.compile(ir);
+					}
+					else if type == code_file_types.catspeak {
+						ir = Catspeak.parse(buffer);
+						main = Catspeak.compile(ir);	
+					}
+					
 				}
 				catch (e) {
 					throw $"Mod {wod.mod_id} requested file {path} which errored on compilation: {pretty_error(e)}"	
@@ -184,8 +206,8 @@ function strip_initial_path_separator_character(path) {
 
 function unload_mod(wod) {
 	log_info($"Unloading mod {wod.mod_id}")
-	var main_globals = mod_get_code_file_globals("mod.meow")
 	global.currently_executing_mod = wod;
+	var main_globals = mod_get_code_file_globals(wod.entrypoint_path)
 	try {
 		main_globals.on_unload();
 	}
@@ -272,7 +294,7 @@ function read_all_mods() {
 		var wod = mod_result.value
 		ds_map_set(global.mod_id_to_mod_map, wod.mod_id, wod);
 		
-		var main = mod_get_code_file("mod.meow", wod)
+		var main = mod_get_code_file(wod.entrypoint_path, wod)
 		var main_globals = catspeak_globals(main)
 		try {
 			global.currently_executing_mod = wod;
@@ -301,4 +323,18 @@ function reroll_cheats_enabled() {
 function pretty_error(e) {
 	// TODO
 	return string(e);
+}
+
+function hot_reload() {
+	var mods = ds_map_values_to_array(global.mod_id_to_mod_map)
+	for (var i = 0; i < array_length(mods); i++) {
+		var wod = mods[i]
+		ds_map_clear(wod.code_files)
+		for (var j = 0; j < wod.items; j++) {
+			var item = wod.items[j];
+			
+		}
+	}
+	
+	
 }

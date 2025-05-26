@@ -1,9 +1,11 @@
 global.empty_method = method(self, empty_function)
 
 global.mods_directory = game_save_id + "mods";
-catspeak_force_init();
 
-expose_to_catspeak();
+
+
+initialize_catspeak_gmlspeak();
+
 
 global.mod_id_to_mod_map = ds_map_create();
 
