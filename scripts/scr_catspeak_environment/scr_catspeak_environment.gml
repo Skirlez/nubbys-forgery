@@ -89,8 +89,13 @@ function CatspeakForeignInterface() constructor {
                 }
                 var asset = asset_get_index(name);
                 if (asset != -1) {
-                    if (asset_get_type(name) == asset_script) {
-                        return method(undefined, asset);
+                    if (asset_get_type(name) == 5) { // (NUBBY'S FORGERY) 5 is what it returns for scripts in this version of nubby, mismatched with asset_script
+						// (NUBBY'S FORGERY) 5 check to see if it's a modloader function
+						if hashset_contains(global.disallowed_functions_set, name) {
+							return undefined;	
+						}
+						return method(undefined, asset);
+						
                     }
                     return asset;
                 }

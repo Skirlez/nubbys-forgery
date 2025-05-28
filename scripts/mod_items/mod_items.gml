@@ -113,7 +113,7 @@ function register_items_for_gameplay() {
 			continue;
 		}
 		
-		item_pair_arr[i] = registries_exchange(global.registry, global.index_registry, mod_resources.item, pair_id)
+		item_pair_arr[i] = mod_registries_exchange(global.registry, global.index_registry, mod_resources.item, pair_id)
 	}
 }
 

@@ -335,6 +335,13 @@ function hot_reload() {
 			
 		}
 	}
-	
-	
+}
+function get_nf_version_string() {
+	return "Nubby's Forgery BETA V1"	
+}
+function get_nf_loaded_string() {
+	return $"({ds_map_size(global.mod_id_to_mod_map)} mod(s) loaded, "
+		+ $"{bimap_size(global.registry[mod_resources.item])} item(s), "
+		+ $"{bimap_size(global.registry[mod_resources.perk])} perk(s), "
+		+ $"{bimap_size(global.registry[mod_resources.supervisor])} supervisor(s))"
 }

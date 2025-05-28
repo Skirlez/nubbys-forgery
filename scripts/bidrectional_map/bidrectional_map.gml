@@ -10,7 +10,9 @@ function bimap_create() {
 	// That's right. It's two ds_maps in a trench coat
 	return [ds_map_create(), ds_map_create()] 
 }
-
+function bimap_size(bimap) {
+	return ds_map_size(bimap[bimap_indices.left_to_right])
+}
 function bimap_get_left(bimap, right) {
 	return ds_map_find_value(bimap[bimap_indices.right_to_left], right)	
 }

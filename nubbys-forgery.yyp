@@ -77,6 +77,7 @@
     {"id":{"name":"obj_generic_supervisor0","path":"objects/obj_generic_supervisor0/obj_generic_supervisor0.yy",},},
     {"id":{"name":"spr_empty","path":"sprites/spr_empty/spr_empty.yy",},},
     {"id":{"name":"scr_catspeak_lexer","path":"scripts/scr_catspeak_lexer/scr_catspeak_lexer.yy",},},
+    {"id":{"name":"hash_set","path":"scripts/hash_set/hash_set.yy",},},
     {"id":{"name":"scr_catspeak_environment","path":"scripts/scr_catspeak_environment/scr_catspeak_environment.yy",},},
     {"id":{"name":"mod_translations","path":"scripts/mod_translations/mod_translations.yy",},},
     {"id":{"name":"game_events","path":"scripts/game_events/game_events.yy",},},

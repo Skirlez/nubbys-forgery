@@ -26,8 +26,13 @@ function registry_clear(registry) {
 function registry_clear_type(registry, type) {
 	bimap_clear(registry[type]);
 }
-
-function registries_exchange(from, to, type, left) {
+function mod_registry_get_left(registry, type, right) {
+	return bimap_get_left(registry[type], right)
+}
+function mod_registry_get_right(registry, type, left) {
+	return bimap_get_right(registry[type], left)
+}
+function mod_registries_exchange(from, to, type, left) {
 	var right = bimap_get_right(from[type], left)
 	return bimap_get_left(to[type], right)
 }

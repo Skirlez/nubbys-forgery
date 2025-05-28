@@ -52,6 +52,7 @@
     {"name":"is_gmlspeak","order":3,"path":"scripts/is_gmlspeak/is_gmlspeak.yy",},
     {"name":"obj_generic_supervisor0","order":7,"path":"objects/obj_generic_supervisor0/obj_generic_supervisor0.yy",},
     {"name":"scr_catspeak_lexer","order":2,"path":"scripts/scr_catspeak_lexer/scr_catspeak_lexer.yy",},
+    {"name":"hash_set","order":22,"path":"scripts/hash_set/hash_set.yy",},
     {"name":"scr_catspeak_environment","order":4,"path":"scripts/scr_catspeak_environment/scr_catspeak_environment.yy",},
     {"name":"mod_translations","order":7,"path":"scripts/mod_translations/mod_translations.yy",},
     {"name":"game_events","order":4,"path":"scripts/game_events/game_events.yy",},

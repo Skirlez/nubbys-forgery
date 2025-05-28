@@ -1,6 +1,7 @@
 clear_all_mods();
 
 ds_map_destroy(global.modloader_game_events)
+hashset_destroy(global.disallowed_functions_set)
 
 registry_destroy(global.registry)
 registry_destroy(global.index_registry)

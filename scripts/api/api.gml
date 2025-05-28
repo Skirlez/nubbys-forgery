@@ -14,3 +14,4 @@ function mod_get_path(path, warn = true, wod = global.currently_executing_mod) {
 	}
 	return full_path;
 }
+
