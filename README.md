@@ -23,10 +23,13 @@ This repository contains a GameMaker project. This project is built, and then me
 with some patches applied from `/patches`.
 This structure is what allows the project to be open-sourced (and also makes it resilient to game updates!)
 
-Mods are written using [Catspeak](https://github.com/katsaii/catspeak-lang).
+Mods are written using [Catspeak](https://www.katsaii.com/catspeak-lang/), or GML with [GMLspeak](https://docs.tabularelf.com/GMLspeak/).
+
+# Installing
+Pick the version you want in https://github.com/Skirlez/nubbys-forgery/releases, and follow the instructions written with it.
 
 ## Making your own mod
-I would advise against it as of now, as the mod structure is still changing. Nevertheless, an up-to-date example mod, with various trinkets I have implemented, is
+I would advise against it as of now, as the API is still changing. Nevertheless, an up-to-date example mod, with various trinkets I have implemented, is
 available at https://github.com/Skirlez/nubbys-forgery-example-mod. It has plenty of comments to help you.
 
 The example mod is released under a public domain license, so you can copy or fork it and make whatever changes you want, without attribution.
@@ -49,7 +52,7 @@ Below is a list of what I want the modloader to have with a tick with what's imp
 See the wiki: [Windows](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Windows)), [Linux](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Linux))
 
 ## License
-Catspeak is licensed under MIT license. Therefore, all of its code files are licensed under the MIT license.
+Catspeak, GMLspeak are licensed under MIT license. Therefore, all of their code files are licensed under the MIT license.
 The rest of the code is licensed under the AGPLv3 license.
 
 ## Contributing
