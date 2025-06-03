@@ -1,8 +1,8 @@
 if on_draw_gui_begin == noone
 	exit;
-global.currently_executing_mod = wod;
+global.cmod = wod;
 try {
-	catspeak_execute_ext(on_draw_gui_begin, self)
+	execute(on_draw_gui_begin, id)
 }
 catch (e) {
 	log_error($"{error_string} Draw GUI Begin: {pretty_error(e)}")

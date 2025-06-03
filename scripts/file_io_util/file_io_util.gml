@@ -39,7 +39,7 @@ enum code_file_types {
 	catspeak,
 }
 
-function mod_get_code_file_type(path) {
+function mod_get_code_type(path) {
 	var extension = get_file_extension(path)
 	if extension == "meow"
 		return code_file_types.catspeak;

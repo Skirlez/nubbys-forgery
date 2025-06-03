@@ -1,6 +1,6 @@
-global.currently_executing_mod = mod_of_origin
+global.cmod = mod_of_origin
 try {
-	catspeak_execute_ext(perk.on_trigger, self)
+	execute(perk.on_trigger, id)
 }
 catch (e) {
 	log_error($"Perk {string_id} errored on trigger: {pretty_error(e)}")

@@ -1,17 +1,11 @@
 global.empty_method = method(self, empty_function)
-
+global.mod_id_to_mod_map = ds_map_create();
+global.logging_socket = network_create_socket(network_socket_udp)
 global.mods_directory = game_save_id + "mods";
-
-
 
 initialize_catspeak_gmlspeak();
 
-
-global.mod_id_to_mod_map = ds_map_create();
-
-global.logging_socket = network_create_socket(network_socket_udp)
-
-global.currently_executing_mod = noone;
+global.cmod = noone;
 
 global.sound_count = 0;
 while (audio_exists(global.sound_count))

@@ -1,5 +1,5 @@
 // For catspeak
-function mod_register_item(item, item_id, wod = global.currently_executing_mod) {
+function mod_register_item(item, item_id, wod = global.cmod) {
 	if !mod_is_id_component_valid(item_id) {
 		log_error($"Mod {wod.mod_id} tried to register an item with invalid ID {item_id}")
 		return;

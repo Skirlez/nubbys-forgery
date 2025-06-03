@@ -1,6 +1,6 @@
 global.modloader_game_events = ds_map_create();
 
-function mod_subscribe_to_game_event(name, callback, wod = global.currently_executing_mod) {
+function mod_subscribe_to_game_event(name, callback, wod = global.cmod) {
 	var arr;
 	if !ds_map_exists(global.modloader_game_events, name) {
 		arr = []
@@ -26,7 +26,7 @@ function on_game_event(name) {
 	var arr = ds_map_find_value(global.modloader_game_events, name)
 	for (var i = 0; i < array_length(arr); i++) {
 		var struct = arr[i];
-		global.currently_executing_mod = struct.mod_of_origin;
+		global.cmod = struct.mod_of_origin;
 		try {
 			struct.callback();
 		}

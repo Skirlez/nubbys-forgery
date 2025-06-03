@@ -1,8 +1,8 @@
 if on_room_end == noone
 	exit;
-global.currently_executing_mod = wod;
+global.cmod = wod;
 try {
-	catspeak_execute_ext(on_room_end, self)
+	execute(on_room_end, id)
 }
 catch (e) {
 	log_error($"{error_string} Room End: {pretty_error(e)}")

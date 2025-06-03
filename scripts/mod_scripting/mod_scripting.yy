@@ -1,7 +1,7 @@
 {
   "resourceType": "GMScript",
   "resourceVersion": "1.0",
-  "name": "expose_to_catspeak",
+  "name": "mod_scripting",
   "isCompatibility": false,
   "isDnD": false,
   "parent": {

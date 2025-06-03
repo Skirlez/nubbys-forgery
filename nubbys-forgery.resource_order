@@ -45,7 +45,7 @@
     {"name":"mod_items","order":11,"path":"scripts/mod_items/mod_items.yy",},
     {"name":"mod_sounds","order":21,"path":"scripts/mod_sounds/mod_sounds.yy",},
     {"name":"empty_function","order":3,"path":"scripts/empty_function/empty_function.yy",},
-    {"name":"expose_to_catspeak","order":6,"path":"scripts/expose_to_catspeak/expose_to_catspeak.yy",},
+    {"name":"mod_scripting","order":6,"path":"scripts/mod_scripting/mod_scripting.yy",},
     {"name":"GMLspeakLexer","order":5,"path":"scripts/GMLspeakLexer/GMLspeakLexer.yy",},
     {"name":"obj_generic_item0","order":1,"path":"objects/obj_generic_item0/obj_generic_item0.yy",},
     {"name":"obj_generic_perk0","order":5,"path":"objects/obj_generic_perk0/obj_generic_perk0.yy",},

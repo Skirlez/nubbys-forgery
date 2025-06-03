@@ -30,5 +30,5 @@ function mod_log() {
 	for (var i = 1; i < argument_count; i++) {
 		text += " " + string(argument[i]);
 	}
-	log_info($"[{global.currently_executing_mod.mod_id}] {text}")
+	log_info($"[{global.cmod.mod_id}] {text}")
 }

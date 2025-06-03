@@ -69,7 +69,7 @@
     {"id":{"name":"mod_items","path":"scripts/mod_items/mod_items.yy",},},
     {"id":{"name":"mod_sounds","path":"scripts/mod_sounds/mod_sounds.yy",},},
     {"id":{"name":"empty_function","path":"scripts/empty_function/empty_function.yy",},},
-    {"id":{"name":"expose_to_catspeak","path":"scripts/expose_to_catspeak/expose_to_catspeak.yy",},},
+    {"id":{"name":"mod_scripting","path":"scripts/mod_scripting/mod_scripting.yy",},},
     {"id":{"name":"GMLspeakLexer","path":"scripts/GMLspeakLexer/GMLspeakLexer.yy",},},
     {"id":{"name":"obj_generic_item0","path":"objects/obj_generic_item0/obj_generic_item0.yy",},},
     {"id":{"name":"obj_generic_perk0","path":"objects/obj_generic_perk0/obj_generic_perk0.yy",},},

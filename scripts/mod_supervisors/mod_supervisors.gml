@@ -1,5 +1,5 @@
 // For catspeak
-function mod_register_supervisor(supervisor, supervisor_id, wod = global.currently_executing_mod) {
+function mod_register_supervisor(supervisor, supervisor_id, wod = global.cmod) {
 	if !mod_is_id_component_valid(supervisor_id) {
 		log_error($"Mod {wod.mod_id} tried to register a supervisor with invalid ID {item_id}")
 		return;

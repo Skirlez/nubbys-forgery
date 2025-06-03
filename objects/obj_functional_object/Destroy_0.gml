@@ -1,8 +1,8 @@
 if on_destroy == noone
 	exit;
-global.currently_executing_mod = wod;
+global.cmod = wod;
 try {
-	catspeak_execute_ext(on_destroy, self)
+	execute(on_destroy, id)
 }
 catch (e) {
 	log_error($"{error_string} Destroy: {pretty_error(e)}")

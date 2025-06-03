@@ -1,8 +1,8 @@
 if on_async_http == noone
 	exit;
-global.currently_executing_mod = wod;
+global.cmod = wod;
 try {
-	catspeak_execute_ext(on_async_http, self)
+	execute(on_async_http, id)
 }
 catch (e) {
 	log_error($"{error_string} Async - HTTP: {pretty_error(e)}")

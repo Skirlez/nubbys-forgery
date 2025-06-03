@@ -1,4 +1,4 @@
-function mod_get_path(path, warn = true, wod = global.currently_executing_mod) {
+function mod_get_path(path, warn = true, wod = global.cmod) {
 	path = strip_initial_path_separator_character(path);
 	var full_path = $"{global.mods_directory}/{wod.folder_name}/{path}";
 	
@@ -15,3 +15,7 @@ function mod_get_path(path, warn = true, wod = global.currently_executing_mod) {
 	return full_path;
 }
 
+function mod_register_function(name, func, wod = global.cmod) {
+	// TODO check name and whatnot
+	ds_map_set(wod.functions, name, func)
+}

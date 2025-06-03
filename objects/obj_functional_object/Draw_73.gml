@@ -1,8 +1,8 @@
 if on_draw_end == noone
 	exit;
-global.currently_executing_mod = wod;
+global.cmod = wod;
 try {
-	catspeak_execute_ext(on_draw_end, self)
+	execute(on_draw_end, id)
 }
 catch (e) {
 	log_error($"{error_string} Draw End: {pretty_error(e)}")

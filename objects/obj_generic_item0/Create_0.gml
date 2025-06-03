@@ -43,9 +43,9 @@ if (ItemLevel == 1)
     alarm_set(6, 1)
 
 MyItemBacker = -1
-global.currently_executing_mod = mod_of_origin;
+global.cmod = mod_of_origin;
 try {
-	catspeak_execute_ext(item.on_create, self)
+	execute(item.on_create, id)
 }
 catch (e) {
 	log_error($"Item {string_id} errored on creation: {pretty_error(e)}")

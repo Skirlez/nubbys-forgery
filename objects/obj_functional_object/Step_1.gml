@@ -1,8 +1,8 @@
 if on_begin_step == noone
 	exit;
-global.currently_executing_mod = wod;
+global.cmod = wod;
 try {
-	catspeak_execute_ext(on_begin_step, self)
+	execute(on_begin_step, id)
 }
 catch (e) {
 	log_error($"{error_string} Begin Step: {pretty_error(e)}")

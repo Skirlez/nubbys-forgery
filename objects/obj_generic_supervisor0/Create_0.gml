@@ -20,9 +20,9 @@ mod_of_origin = ds_map_find_value(global.mod_id_to_mod_map, mod_identifier_get_n
 
 
 
-global.currently_executing_mod = mod_of_origin;
+global.cmod = mod_of_origin;
 try {
-	catspeak_execute_ext(supervisor.on_create, self)
+	execute(supervisor.on_create, id)
 }
 catch (e) {
 	log_error($"Supervisor {string_id} errored on creation: {pretty_error(e)}")

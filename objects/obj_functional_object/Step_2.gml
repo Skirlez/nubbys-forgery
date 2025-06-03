@@ -1,8 +1,8 @@
 if on_end_step == noone
 	exit;
-global.currently_executing_mod = wod;
+global.cmod = wod;
 try {
-	catspeak_execute_ext(on_end_step, self)
+	execute(on_end_step, id)
 }
 catch (e) {
 	log_error($"{error_string} End Step: {pretty_error(e)}")

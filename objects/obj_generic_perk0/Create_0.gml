@@ -25,9 +25,9 @@ DisablePerk = 0
 PerkQueue = ds_list_create()
 WhatSlot = -1
 
-global.currently_executing_mod = mod_of_origin;
+global.cmod = mod_of_origin;
 try {
-	catspeak_execute_ext(perk.on_create, self)
+	execute(perk.on_create, id)
 }
 catch (e) {
 	log_error($"Perk {string_id} errored on creation: {pretty_error(e)}")

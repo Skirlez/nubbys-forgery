@@ -87,13 +87,24 @@ function CatspeakForeignInterface() constructor {
                 if (variable_struct_exists(db, name)) {
                     return db[$ name];
                 }
+				
+				// (NUBBY'S FORGERY) check to see if it's one of the mod's functions
+				var func = ds_map_find_value(global.cmod.functions, name)
+				if func != undefined {
+					return func;	
+				}
+				
                 var asset = asset_get_index(name);
                 if (asset != -1) {
-                    if (asset_get_type(name) == 5) { // (NUBBY'S FORGERY) 5 is what it returns for scripts in this version of nubby, mismatched with asset_script
-						// (NUBBY'S FORGERY) 5 check to see if it's a modloader function
+					// (NUBBY'S FORGERY) 5 is what it returns for scripts in this version of nubby, mismatched with asset_script from this runtime version
+					// (NUBBY'S FORGERY) you may conclude then, that the runtime version is mismatched, but I really don't know what the true version is,
+					// (NUBBY'S FORGERY) as it seems to be 5 in 2024.4 too, which is what UMT reports Nubby uses...
+					if (asset_get_type(name) == 5) { 
+						// (NUBBY'S FORGERY) check to see if it's a modloader function (don't want people to accidentally use one)
 						if hashset_contains(global.disallowed_functions_set, name) {
 							return undefined;	
 						}
+
 						return method(undefined, asset);
 						
                     }
@@ -142,7 +153,8 @@ function CatspeakForeignInterface() constructor {
         if (exposeEverythingIDontCareIfModdersCanEditUsersSaveFilesJustLetMeDoThis) {
             try {
                 var db = __catspeak_get_gml_interface();
-                return variable_struct_exists(db, name) || asset_get_index(name) != -1;
+				// (NUBBY'S FORGERY) add || statement
+                return variable_struct_exists(db, name) || asset_get_index(name) != -1 || ds_map_exists(global.cmod.functions, name);
             } catch (_) {
                 __catspeak_error_silent("GML interface not included, defaulting to `false`");
             }

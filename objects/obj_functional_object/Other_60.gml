@@ -1,8 +1,8 @@
 if on_async_image_loaded == noone
 	exit;
-global.currently_executing_mod = wod;
+global.cmod = wod;
 try {
-	catspeak_execute_ext(on_async_image_loaded, self)
+	execute(on_async_image_loaded, id)
 }
 catch (e) {
 	log_error($"{error_string} Async - Image Loaded: {pretty_error(e)}")

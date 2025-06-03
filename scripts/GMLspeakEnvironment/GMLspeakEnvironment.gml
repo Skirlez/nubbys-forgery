@@ -213,7 +213,7 @@ function GMLspeakEnvironment() : CatspeakEnvironment() constructor {
 		function() {return keyboard_string;},
 	);
 	
-	interface.exposeDynamicConstant("global", function() {return sharedGlobal;});
+	//interface.exposeDynamicConstant("global", function() {return sharedGlobal;});
 	
 	interface.exposeMethod( 
 		"method",
