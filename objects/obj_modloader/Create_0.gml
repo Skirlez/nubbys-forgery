@@ -24,3 +24,30 @@ if is_console_and_devmode_enabled()
 // prevents crash with devmode since this is for some reason set in step of an object and not in create
 global.CursTar = -1
 
+run_delayed = [];
+function add_to_run_delayed(frames, func, wod) {
+	array_push(run_delayed, { time : frames, func : func, mod_of_origin : wod })
+}
+function remove_mod_from_run_delayed(wod) {
+	var len = array_length(run_delayed);
+	for (var i = 0; i < len; i++) {
+		if run_delayed[i].mod_of_origin == wod {
+			array_delete(run_delayed, i, 1)
+			len--;
+			i--;
+		}
+	}
+}
+function iterate_run_delayed() {
+	var len = array_length(run_delayed);
+	for (var i = 0; i < len; i++) {
+		var struct = run_delayed[i];
+		struct.time--;
+		if struct.time <= 0 {
+			struct.func();
+			array_delete(run_delayed, i, 1)
+			len--;
+			i--;
+		}
+	}
+}

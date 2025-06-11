@@ -263,6 +263,8 @@ function unload_mod(wod) {
 	
 	ds_map_destroy(wod.functions)
 	
+	remove_mod_from_run_delayed(wod)
+	
 	ds_map_delete(global.mod_id_to_mod_map, wod.mod_id);
 }
 

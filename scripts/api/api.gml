@@ -19,3 +19,8 @@ function mod_register_function(name, func, wod = global.cmod) {
 	// TODO check name and whatnot
 	ds_map_set(wod.functions, name, func)
 }
+
+
+function mod_run_delayed(frames, func, wod = global.cmod) {
+	obj_modloader.add_to_run_delayed(frames, func, wod)
+}

@@ -104,9 +104,7 @@ function CatspeakForeignInterface() constructor {
 						if hashset_contains(global.disallowed_functions_set, name) {
 							return undefined;	
 						}
-
-						return method(undefined, asset);
-						
+						return method(undefined, asset);	
                     }
                     return asset;
                 }
