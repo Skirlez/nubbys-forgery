@@ -11,4 +11,5 @@ default:
 
 // TARGET: LINENUMBER
 // 3
-on_game_event(arg0)
+// Trigger game event callbacks
+on_game_event(arg0, argument1)

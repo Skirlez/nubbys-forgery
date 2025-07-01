@@ -1,2 +1,2 @@
 // TARGET: TAIL
-register_supervisors_for_gameplay()
+register_supervisors_for_gameplay();

@@ -22,5 +22,5 @@ function mod_register_function(name, func, wod = global.cmod) {
 
 
 function mod_run_delayed(frames, func, wod = global.cmod) {
-	obj_modloader.add_to_run_delayed(frames, func, wod)
+	agi("obj_modloader").add_to_run_delayed(frames, func, wod)
 }

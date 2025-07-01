@@ -84,6 +84,8 @@ function create_mod(mod_folder_name) {
 	
 	wod.game_events = [];
 	wod.callback_records = [];
+	wod.autosave_save_callbacks = []
+	wod.autosave_load_callbacks = []
 	
 	// TODO check invalid characters
 	return new result_ok(wod)
@@ -278,6 +280,7 @@ function clear_all_mods() {
 	}
 	ds_map_clear(global.mod_id_to_mod_map)
 	registry_clear(global.registry)
+	registry_clear(global.index_registry)
 }
 
 

@@ -14,6 +14,10 @@ global.sprite_count = 0;
 while (sprite_exists(global.sprite_count))
 	global.sprite_count++;
 
+global.last_indices = array_create(mod_resources.size)
+global.last_indices[mod_resources.item] = 172
+global.last_indices[mod_resources.perk] = 30
+global.last_indices[mod_resources.supervisor] = 10
 
 log_info("****************\nModloader start\n****************")
 read_all_mods()

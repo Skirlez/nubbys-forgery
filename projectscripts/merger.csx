@@ -83,6 +83,8 @@ foreach (UndertaleScript script in modloaderData.Scripts)
 
 
 foreach (UndertaleGameObject gameObject in modloaderData.GameObjects) {
+	if (Data.GameObjects.ByName(gameObject.Name.Content) != null)
+		continue;
 	UndertaleGameObject parent = gameObject.ParentId;
 	if (parent != null) {
 		UndertaleGameObject parentFromNNF = Data.GameObjects.ByName(parent.Name.Content);

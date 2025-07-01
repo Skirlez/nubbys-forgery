@@ -81,8 +81,6 @@ function mod_register_supervisor(supervisor, supervisor_id, wod = global.cmod) {
 function register_supervisors_for_gameplay() {
 	free_all_allocated_objects(mod_resources.supervisor)
 	clear_index_assignments(mod_resources.supervisor)
-	
-
 	var supervisor_ids = bimap_lefts_array(global.registry[mod_resources.supervisor])
 	for (var i = 0; i < array_length(supervisor_ids); i++) {		
 		with (agi("obj_SupervisorMGMT")) {
@@ -98,21 +96,23 @@ function register_supervisors_for_gameplay() {
 			SVGoAud[supervisor_index] = supervisor.go_sound;
 			SVSpriteClick[supervisor_index] = supervisor.sprites.preview_clicked;
 				
-			var obj = allocate_object(mod_resources.supervisor, supervisor)
-				
-			// TODO. use a map for this.
-			supervisor.__object = obj;
-				
-			assign_index_to_resource(mod_resources.supervisor, supervisor, supervisor_index)
-			log_info($"Supervisor {supervisor_ids[i]} has been indexed: {supervisor_index}")
+			register_supervisor_for_gameplay(supervisor, supervisor_index, supervisor_ids[i])
 		}
 	}
+}
+function register_supervisor_for_gameplay(supervisor, index, string_id) {
+	var obj = allocate_object(mod_resources.supervisor, supervisor)
+	// TODO. use a map for this.
+	supervisor.__object = obj;
+	assign_index_to_resource(mod_resources.supervisor, supervisor, index)
+	log_info($"Supervisor {string_id} has been indexed: {index}")
 }
 
 // Called from gml_Object_obj_LvlMGMT_Other_4
 function create_mod_supervisor_object(index_id) {
+	index_id = real(index_id); // SVID is sometimes a string
 	var supervisor = bimap_get_right(global.index_registry[mod_resources.supervisor], index_id);
-	if is_undefined(supervisor)
+	if supervisor == undefined
 		return; // Vanilla supervisor
 
 	var obj = supervisor.__object;
@@ -121,15 +121,13 @@ function create_mod_supervisor_object(index_id) {
 
 // Called from gml_Object_obj_TonyMGMT_Create_0
 function register_supervisors_sprites_for_gameplay() {
-	var index_id = agi("obj_LvlMGMT").SVID
+	var index_id = real(agi("obj_LvlMGMT").SVID); // SVID is sometimes a string
 	var supervisor = bimap_get_right(global.index_registry[mod_resources.supervisor], index_id);
 	// We only need to register the sprites of the supervisor we're using, if we are using a modded one...
-	if is_undefined(supervisor)
+	if supervisor == undefined
 		return;
 
-	// TODO: Perhaps we can somehow make it so the modded supervisor always takes the last index
-	// since we don't fill any indices before it
-	
+
 	var sprites = supervisor.sprites;
 	with (agi("obj_TonyMGMT")) {
 		TonyAngrySpr[index_id] = sprites.angry
@@ -157,4 +155,8 @@ function on_supervisor_preview_choose_clicked_audio() {
 		SVCurrentAu = supervisor.clicked_sounds[irandom_range(0, array_length(supervisor.clicked_sounds) - 1)]
 	else
 		SVCurrentAu = agi("snd_silence")
+}
+
+function mod_get_current_supervisor_string_id(instance) {
+	
 }

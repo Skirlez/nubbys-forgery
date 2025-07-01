@@ -20,7 +20,7 @@ function mod_subscribe_to_game_event(name, callback, wod = global.cmod) {
 }
 
 // Called from scr_GameEv
-function on_game_event(name) {
+function on_game_event(name, parameter_struct) {
 	if !ds_map_exists(global.modloader_game_events, name)
 		return;
 	var arr = ds_map_find_value(global.modloader_game_events, name)
@@ -28,7 +28,7 @@ function on_game_event(name) {
 		var struct = arr[i];
 		global.cmod = struct.mod_of_origin;
 		try {
-			struct.callback();
+			struct.callback(parameter_struct);
 		}
 		catch (e) {
 			log_error($"Mod ${struct.mod_of_origin.mod_id} errored on {name} Game Event callback: {pretty_error(e)}")

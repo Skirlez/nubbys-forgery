@@ -4,6 +4,7 @@ enum mod_resources {
 	supervisor,
 	size,
 }
+global.resource_names = ["item", "perk", "supervisor"]
 
 function registry_create() {
 	return array_create_ext(mod_resources.size, function () { 
@@ -26,6 +27,13 @@ function registry_clear(registry) {
 function registry_clear_type(registry, type) {
 	bimap_clear(registry[type]);
 }
+function mod_registry_left_exists(registry, type, left) {
+	return bimap_left_exists(registry[type], left)
+}
+function mod_registry_right_exists(registry, type, right) {
+	return bimap_right_exists(registry[type], right)
+}
+
 function mod_registry_get_left(registry, type, right) {
 	return bimap_get_left(registry[type], right)
 }

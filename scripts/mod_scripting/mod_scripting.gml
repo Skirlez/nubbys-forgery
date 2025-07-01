@@ -13,8 +13,17 @@ function initialize_catspeak_gmlspeak() {
 	// (This causes an Ubuntu crash. IDK why. The real game is on proton on steam anyways so who cares.)
 	Catspeak.interface.exposeEverythingIDontCareIfModdersCanEditUsersSaveFilesJustLetMeDoThis = true;
 	GMLspeak.interface.exposeEverythingIDontCareIfModdersCanEditUsersSaveFilesJustLetMeDoThis = true;
-
+	
+	expose_constants(Catspeak.interface)
+	expose_constants(GMLspeak.interface)
+	
 	GMLspeak.interface.compileFlags.checkForVariables = true;
+}
+
+function expose_constants(interface) {
+	interface.exposeConstant("mod_resource_item", mod_resources.item)
+	interface.exposeConstant("mod_resource_perk", mod_resources.perk)
+	interface.exposeConstant("mod_resource_supervisor", mod_resources.supervisor)
 }
 
 
@@ -22,13 +31,15 @@ function compile_code_file(path) {
 	var type = mod_get_code_type(path)
 	var buffer = buffer_load(path)
 	var ir;
+	var main;
 	if type == code_file_types.gml {
 		ir = GMLspeak.parse(buffer)
+		main = GMLspeak.compile(ir);
 	}
 	else if type == code_file_types.catspeak {
 		ir = Catspeak.parse(buffer);
+		main = Catspeak.compile(ir);
 	}
-	var main = Catspeak.compile(ir);
 
 	buffer_delete(buffer)
 	return main;
@@ -82,6 +93,13 @@ function put_disallowed_functions(hashset) {
 	hashset_put(hashset, "is_gmlspeak")
 	hashset_put(hashset, "__gmlspeak_log")
 	hashset_put(hashset, "__gmlspeak_method__")
+	hashset_put(hashset, "save_forgery_autosave")
+	hashset_put(hashset, "load_button_is_save_loadable")
+	hashset_put(hashset, "load_button_create_message")
+	hashset_put(hashset, "parse_autosave_array")
+	hashset_put(hashset, "write_autosave_array")
+	hashset_put(hashset, "load_forgery_autosave")
+	hashset_put(hashset, "find_string_id_from_data")
 	hashset_put(hashset, "get_struct_discompliance_with_contract")
 	hashset_put(hashset, "generate_discompliance_error_text")
 	hashset_put(hashset, "initialize_missing")
@@ -177,6 +195,11 @@ function put_disallowed_functions(hashset) {
 	hashset_put(hashset, "__catspeak_preset_unsafe")
 	hashset_put(hashset, "catspeak_preset_add")
 	hashset_put(hashset, "__catspeak_init_presets")
+	hashset_put(hashset, "initialize_catspeak_gmlspeak")
+	hashset_put(hashset, "expose_constants")
+	hashset_put(hashset, "compile_code_file")
+	hashset_put(hashset, "execute")
+	hashset_put(hashset, "put_disallowed_functions")
 	hashset_put(hashset, "GMLspeakCodegen")
 	hashset_put(hashset, "__gmlspeak_expr_index_check__")
 	hashset_put(hashset, "__gmlspeak_expr_index_check_hash__")
@@ -200,6 +223,7 @@ function put_disallowed_functions(hashset) {
 	hashset_put(hashset, "hashset_clear")
 	hashset_put(hashset, "hashset_delete")
 	hashset_put(hashset, "bimap_create")
+	hashset_put(hashset, "bimap_size")
 	hashset_put(hashset, "bimap_get_left")
 	hashset_put(hashset, "bimap_get_right")
 	hashset_put(hashset, "bimap_set")
@@ -214,6 +238,7 @@ function put_disallowed_functions(hashset) {
 	hashset_put(hashset, "bimap_right_exists")
 	hashset_put(hashset, "CatspeakParser")
 	hashset_put(hashset, "register_supervisors_for_gameplay")
+	hashset_put(hashset, "register_supervisor_for_gameplay")
 	hashset_put(hashset, "create_mod_supervisor_object")
 	hashset_put(hashset, "register_supervisors_sprites_for_gameplay")
 	hashset_put(hashset, "on_supervisor_preview_choose_clicked_audio")
@@ -276,6 +301,7 @@ function put_disallowed_functions(hashset) {
 	hashset_put(hashset, "pretty_error")
 	hashset_put(hashset, "hot_reload")
 	hashset_put(hashset, "get_nf_version_string")
+	hashset_put(hashset, "get_nf_loaded_string")
 	hashset_put(hashset, "load_mod_translations")
 	hashset_put(hashset, "append_mod_translations")
 	hashset_put(hashset, "empty_function")
@@ -307,8 +333,6 @@ function put_disallowed_functions(hashset) {
 	hashset_put(hashset, "generic_error")
 	hashset_put(hashset, "error_with_id")
 	hashset_put(hashset, "GMLspeakEnvironment")
-	hashset_put(hashset, "initialize_catspeak_gmlspeak")
-	hashset_put(hashset, "put_disallowed_functions")
 }
 
 
