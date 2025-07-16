@@ -1,0 +1,6 @@
+meta: 
+target = gml_Object_obj_LvlMGMT_Other_4
+patch:
+move_to_end()
+write_after('create_mod_supervisor_object(SVID)')
+	

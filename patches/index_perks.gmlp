@@ -1,0 +1,5 @@
+meta:
+target = gml_Object_obj_PerkMGMT_Create_0
+patch:
+move_to_end()
+write_after('register_perks_for_gameplay()')

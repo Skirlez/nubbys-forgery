@@ -1,0 +1,6 @@
+// Add mod translation keys
+meta:
+target = gml_GlobalScript_scr_InitTranslations
+patch:
+find_line_with('global.Translations =')
+write_after('append_mod_translations()')

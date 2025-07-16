@@ -1,0 +1,29 @@
+meta:
+target = gml_Object_obj_LoadGameBtn_Create_0
+patch:
+move_to_end()
+write_after(
+'missing_resources = load_button_is_save_loadable()
+mod_message = noone'
+)
+
+
+meta:
+target = gml_Object_obj_LoadGameBtn_Step_0
+patch:
+write_before(
+	'if instance_exists(mod_message) {
+		mask_index = spr_empty
+	}
+	else
+		mask_index = sprite_index'
+)
+find_line_with('if (obj_LvlMGMT.GameFader == 0)')
+write_before(
+'if (array_length(missing_resources) > 0) {
+	mod_message = load_button_create_message(missing_resources)
+}
+else'
+)
+
+

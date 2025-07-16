@@ -1,0 +1,5 @@
+meta:
+target = gml_Object_obj_TonyMGMT_Create_0
+patch:
+move_to_end()
+write_after('register_supervisors_sprites_for_gameplay()')

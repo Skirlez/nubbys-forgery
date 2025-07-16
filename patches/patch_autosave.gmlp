@@ -1,0 +1,20 @@
+// Load forgery autosave, passing in old data to fix indices
+meta:
+target = gml_GlobalScript_scr_Load_AutoSave
+patch:
+find_line_with('json_parse(_LoadString)')
+write_after(
+	'load_forgery_autosave(_LoadData)'
+)
+
+// End of the function. Save forgery's additional save file. Additionally provide the base save string, for hashing.
+meta:
+target = gml_GlobalScript_scr_Save_AutoSave
+patch:
+move_to_end()
+reverse_find_line_with(
+	'buffer_delete(_Buffer)'
+)
+write_after(
+	'save_forgery_autosave(_SaveString)'
+)

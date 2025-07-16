@@ -1,0 +1,23 @@
+// Trigger game event callbacks
+meta:
+target = gml_GlobalScript_scr_GameEv
+patch:
+find_line_with('{')
+write_after(
+    'on_game_event(arg0, argument1)'
+)
+
+// Make it so modders can pass in whatever trigger condition they want
+meta:
+target = gml_GlobalScript_scr_GameEv
+patch:
+find_line_with('switch (arg0)')
+find_line_with('{')
+write_after(
+'default:
+    scr_ItemMetaOrder(arg0)
+    scr_PerkMetaOrder(arg0)
+    scr_StatusMetaOrder(arg0)
+    break;'
+)
+

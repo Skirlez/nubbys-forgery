@@ -125,85 +125,7 @@ foreach (UndertaleString str in modloaderData.Strings)
 Data.GeneralInfo.Info |= UndertaleGeneralInfo.InfoFlags.ShowCursor;
 Data.Options.Info |= UndertaleOptions.OptionsFlags.ShowCursor;
 
-// Apply the patches
-
-string[] files = Directory.GetFiles(modloaderPatchesPath);
-
-foreach (string file in files) {
-	if (Path.GetExtension(file) == ".gml") {
-		string codeEntryName = Path.GetFileNameWithoutExtension(file);
-		string patches = File.ReadAllText(file);
-		applyPatches(codeEntryName, patches);
-	}
-}
-
-void applyPatches(string codeEntryName, string patches) {
-	UndertaleCode entry = Data.Code.ByName(codeEntryName);
-
-	// Same default settings as editor
-	Underanalyzer.Decompiler.DecompileSettings settings = new();
-	settings.UnknownArgumentNamePattern = "arg{0}";
-	settings.RemoveSingleLineBlockBraces = true;
-	settings.EmptyLineAroundBranchStatements = true;
-	settings.EmptyLineBeforeSwitchCases = true;
-
-	GlobalDecompileContext globalContext = new GlobalDecompileContext(Data);
-
-	CodeImportGroup importGroup = new(Data, globalContext, settings);
-
-	string targetPattern = @"// TARGET: ([^\n\r]+)";
-	string[] sections = Regex.Split(patches, targetPattern);
-
-	for (int i = 1; i < sections.Length; i += 2) {
-		string code = GetDecompiledText(entry, globalContext, settings);
-		string target = sections[i];
-		string patch = sections[i + 1].Trim();
-		string finalResult;
-		switch (target) {
-			case "TAIL":
-				finalResult = code + "\n" + patch;
-				break;
-			case "HEAD": 
-				finalResult = patch + "\n" + code;
-				break;
-			case "REPLACE":
-				finalResult = patch;
-				break;
-			case "STRING":
-				string[] parts = patch.Split('>');
-				finalResult = code.Replace(parts[0], parts[1]);
-				break;
-			case "LINENUMBER_REPLACE": 
-				int firstNewline = patch.IndexOf("\n");
-				int insertPosition = int.Parse(patch.Substring(2, firstNewline - 1));
-				string[] lines = code.Split('\n');
-				lines[insertPosition - 1] = patch.Substring(firstNewline);
-				finalResult = string.Join("\n", lines);
-				break;
-			case "LINENUMBER": 
-				firstNewline = patch.IndexOf("\n");
-				insertPosition = int.Parse(patch.Substring(2, firstNewline - 1));
-				lines = code.Split('\n');
-				lines[insertPosition - 1] = patch.Substring(firstNewline) + "\n" + lines[insertPosition - 1];
-				finalResult = string.Join("\n", lines);
-				break;
-			default:
-				finalResult = code;
-				break;
-		};
-		
-		importGroup.QueueReplace(codeEntryName, finalResult);
-		importGroup.Import();
-	}
-	
-}
-
-
-
-
-
 // Duplicating generic objects
-
 UndertaleGameObject obj_generic_item0 = Data.GameObjects.ByName("obj_generic_item0");
 UndertaleGameObject obj_generic_perk0 = Data.GameObjects.ByName("obj_generic_perk0");
 UndertaleGameObject obj_generic_supervisor0 = Data.GameObjects.ByName("obj_generic_supervisor0");
@@ -262,6 +184,432 @@ UndertaleGameObject cloneObject(UndertaleGameObject sourceObj, string newName) {
 
 // Changes the save location to nubby's forgery
 Data.GeneralInfo.Name = modloaderData.GeneralInfo.Name;
+enum PatchType {
+	WriteBefore,
+	WriteAfter,
+	WriteReplace
+}
+Dictionary<string, PatchType> writeFunctionTypes = new Dictionary<string, PatchType>
+{
+	{"write_before", PatchType.WriteBefore},
+	{"write_replace", PatchType.WriteReplace},
+	{"write_after", PatchType.WriteAfter}
+};
+class Patch {
+	public string text;
+	public bool critical;
+	public string owner;
+	public PatchType type;
+	public Patch(PatchType type, string text, bool critical, string owner) {
+		this.text = text;
+		this.type = type;
+		this.critical = critical;
+		this.owner = owner;
+	}
+}
 
+var allPatches = new Dictionary<string, Dictionary<int, List<Patch>>>();
+
+// Same default settings as editor
+Underanalyzer.Decompiler.DecompileSettings settings = new();
+settings.UnknownArgumentNamePattern = "arg{0}";
+settings.RemoveSingleLineBlockBraces = true;
+settings.EmptyLineAroundBranchStatements = true;
+settings.EmptyLineBeforeSwitchCases = true;
+
+GlobalDecompileContext globalContext = new GlobalDecompileContext(Data);
+
+
+
+// Apply the patches
+applyPatches(modloaderPatchesPath);
 
 ScriptMessage("Done! Nubby's Forgery has been merged!");
+
+
+void applyPatches(string path) {
+	foreach (string file in Directory.GetFiles(modloaderPatchesPath, "*.gmlp", SearchOption.AllDirectories)) {
+		string patchfile = File.ReadAllText(file);
+		try {
+			executePatchFile(patchfile, "modloader");
+		}
+		catch (Exception e) {
+			string relativePath = Path.GetRelativePath(modloaderPatchesPath, file);
+			Console.WriteLine($"Error in file {relativePath}: {e.Message}");
+		}
+	}
+
+	CodeImportGroup importGroup = new(Data, globalContext, settings);
+
+	foreach (string file in allPatches.Keys) {
+		ScriptMessage(file);
+		UndertaleCode codeFile = Data.Code.ByName(file);
+		string code = GetDecompiledText(codeFile, globalContext, settings);
+		string[] lines = code.Split('\n');
+		Dictionary<int, List<Patch>> filePatches = allPatches[file];
+		foreach(int line in filePatches.Keys) {
+			List<Patch> linePatches = filePatches[line];
+
+			// TODO: The order in which we iterate on this list of patches must be consistent
+			// TODO: patch conflict detection
+			foreach (Patch patch in linePatches) {
+				switch (patch.type) {
+					case PatchType.WriteBefore:
+						lines[line] = patch.text + "\n" + lines[line];
+						break;
+					case PatchType.WriteAfter:
+						lines[line] = lines[line] + "\n" + patch.text;
+						break;
+					case PatchType.WriteReplace:
+						lines[line] = patch.text;
+						break;
+					default:
+						break;
+				}
+			}
+
+		}
+		
+		string finalResult = string.Join("\n", lines);
+		importGroup.QueueReplace(file, finalResult);
+		importGroup.Import();
+	}
+
+}
+
+
+class Token {
+	public int lineNumber;
+	public Token(int lineNumber) {
+		this.lineNumber = lineNumber;
+	}
+}
+class NumberToken : Token {
+	public int number;
+	public NumberToken(int number, int lineNumber) : base(lineNumber) {
+		this.number = number;
+	}
+}
+
+class NameToken : Token {
+	public string name;
+	public NameToken(string name, int lineNumber) : base(lineNumber) {
+		this.name = name;
+	}
+}
+class SectionToken : Token {
+	public string section;
+	public SectionToken(string section, int lineNumber) : base(lineNumber) {
+		this.section = section;
+	}
+}
+class EqualsToken : Token { 
+	public EqualsToken(int lineNumber) : base(lineNumber) { }
+}
+class ParensStartToken : Token { 
+	public ParensStartToken(int lineNumber) : base(lineNumber) { }
+}
+class ParensEndToken : Token {
+	public ParensEndToken(int lineNumber) : base(lineNumber) { }
+}
+
+class StringToken : Token {
+	public string text;
+	public StringToken(string text, int lineNumber) : base(lineNumber) {
+		this.text = text;
+	}
+}
+
+Token[] tokenize(string patch) {
+	List<Token> tokens = new List<Token>();
+	int lineNumber = 1;
+	string build = "";
+	for (int i = 0; i < patch.Length; i++) {
+		char c = patch[i];
+		if (c == '/' && i + 1 < patch.Length) {
+			if (patch[i + 1] == '/') {
+				i += 2;
+				while (i < patch.Length && patch[i] != '\n')
+					i++;
+				continue;
+			}
+			else if (patch[i + 1] == '*') {
+				i += 2;
+				while (i + 1 < patch.Length && !(patch[i] == '*' && patch[i + 1] == '/'))
+					i++;
+				i++;
+				continue;
+			}
+		}
+		if (char.IsWhiteSpace(c)) {
+			if (build != "") {
+				tokens.Add(new NameToken(build, lineNumber));
+				build = "";
+			}
+			if (c == '\n')
+				lineNumber++;
+			continue;
+		}
+		if (c == ':') {
+			if (build != "") {
+				tokens.Add(new SectionToken(build, lineNumber));
+				build = "";
+			}
+			continue;
+		}
+		if (build == "" && (c == '-' || c == '+' || char.IsDigit(c))) {
+			build += c;
+			i++;
+			while (i < patch.Length && char.IsDigit(patch[i])) {
+				build += patch[i];
+				i++;
+			}
+			if (build == "-" || build == "+") {
+				// TODO error
+			}
+			else {
+				int number = int.Parse(build);
+				tokens.Add(new NumberToken(number, lineNumber));
+			}
+			build = "";
+			i--;
+			continue;
+		}
+
+		// TODO optimize
+		if (c == '=') {
+			if (build != "") {
+				tokens.Add(new NameToken(build, lineNumber));
+				build = "";
+			}
+			tokens.Add(new EqualsToken(lineNumber));
+			continue;
+		}
+		if (c == '(') {
+			if (build != "") {
+				tokens.Add(new NameToken(build, lineNumber));
+				build = "";
+			}
+			tokens.Add(new ParensStartToken(lineNumber));
+			continue;
+		}
+		if (c == ')') {
+			if (!string.IsNullOrWhiteSpace(build)) {
+				tokens.Add(new NameToken(build, lineNumber));
+				build = "";
+			}
+			tokens.Add(new ParensEndToken(lineNumber));
+			continue;
+		}
+
+		if (c == '\'') {
+			if (!string.IsNullOrWhiteSpace(build)) {
+				tokens.Add(new NameToken(build, lineNumber));
+			}
+			int lineNumberStart = lineNumber;
+			build = "";
+			string text = "";
+			i++;
+			while (i < patch.Length && !(patch[i - 1] != '\\' && patch[i] == '\'')) {
+				if (patch[i] == '\n')
+					lineNumber++;
+				text += patch[i];
+				i++;
+			}
+			if (i >= patch.Length) {
+				// TODO ERROR
+				continue;	
+			}
+			if (!string.IsNullOrWhiteSpace(text)) {
+				tokens.Add(new StringToken(text, lineNumberStart));
+			}
+			continue;
+		}
+		build += c;
+	}
+	return tokens.ToArray();
+}
+
+void executePatchFile(string patchfile, string owner) {
+	Token[] tokens = tokenize(patchfile);
+	int pos = 0;
+	while (pos < tokens.Length) {
+		int lastLineNumber = tokens[pos].lineNumber;
+		if (tokens[pos] is SectionToken metaSectionToken && metaSectionToken.section == "meta") {
+			(string target, bool critical, pos) = executePatchMetadata(tokens, pos + 1);
+			if (pos < tokens.Length || tokens[pos] is SectionToken patchSectionToken && patchSectionToken.section == "patch") {
+				pos = executePatch(tokens, pos + 1, target, critical, owner);
+			}
+			else {
+				throw new Exception($"Incomplete patch; meta section without patch section");
+			}
+		}
+		else {
+			throw new Exception($"Expected \"meta:\" section at start of patch (line {lastLineNumber})");
+		}
+	}
+}
+
+
+(string target, bool critical, int pos) executePatchMetadata(Token[] tokens, int pos) {
+	bool critical = true;
+	string target = "";
+	while (pos < tokens.Length) {
+		Token token = tokens[pos];
+		if (token is NameToken nameToken) {
+			switch (nameToken.name) {
+				case "critical": {
+					Token equalsToken = expect(tokens, pos + 1, typeof(EqualsToken), nameToken.lineNumber);
+					pos++;
+					NameToken valueToken = (NameToken)expect(tokens, pos + 1, typeof(NameToken), equalsToken.lineNumber);
+					pos++;
+					if (valueToken.name != "true" && valueToken.name != "false") {
+						throw new Exception($"At line {valueToken.lineNumber}: Expected \"true\" or \"false\"");
+					}
+					critical = valueToken.name == "true";
+					break;
+				}
+				case "target": {
+					Token equalsToken = expect(tokens, pos + 1, typeof(EqualsToken), nameToken.lineNumber);
+					pos++;
+					NameToken targetToken = (NameToken)expect(tokens, pos + 1, typeof(NameToken), equalsToken.lineNumber);
+					pos++;
+					if (Data.Code.ByName(targetToken.name) is null)
+						throw new Exception($"At line {targetToken.lineNumber}: code file {targetToken.name} does not exist");
+					target = targetToken.name;
+					break;
+				}
+				default:
+					throw new Exception($"At line {nameToken.lineNumber}: invalid metadata name {nameToken.name}");
+					break;
+			}
+		}
+		else {
+			break; // leave as soon as we stop seeing name tokens
+		}
+		pos++;
+	}
+	return (target, critical, pos);
+}
+
+int executePatch(Token[] tokens, int pos, string target, bool critical, string owner) {
+	string code = GetDecompiledText(Data.Code.ByName(target), globalContext, settings);
+	string[] lines = code.Split('\n');
+
+	Dictionary<int, List<Patch>> filePatches;
+	if (!allPatches.ContainsKey(target)) {
+		filePatches = new Dictionary<int, List<Patch>>();
+		allPatches[target] = filePatches;
+	}
+	else {
+		filePatches = allPatches[target];
+	}
+	int filePos = 0;
+	while (pos < tokens.Length) {
+		Token token = tokens[pos];
+		if (token is SectionToken) {
+			break;
+		}
+		if (token is NameToken nameToken) {
+			switch (nameToken.name) {
+				case "move_to_end": {
+					Token startToken = expect(tokens, pos + 1, typeof(ParensStartToken), nameToken.lineNumber);
+					pos++;
+					Token endToken = expect(tokens, pos + 1, typeof(ParensEndToken), startToken.lineNumber);
+					pos++;
+					filePos = lines.Length - 1;
+					break;
+				}
+				case "move_to":
+				case "move": {
+					Token startToken = expect(tokens, pos + 1, typeof(ParensStartToken), nameToken.lineNumber);
+					pos++;
+					NumberToken numberToken = (NumberToken)expect(tokens, pos + 1, typeof(NumberToken), startToken.lineNumber);
+					pos++;
+					Token endToken = expect(tokens, pos + 1, typeof(ParensEndToken), numberToken.lineNumber);
+					pos++;
+					
+					if (nameToken.name == "move_to")
+						filePos = numberToken.number - 1;
+					else
+						filePos += numberToken.number;
+				
+					break;
+				}
+				case "find_line_with": {
+					Token startToken = expect(tokens, pos + 1, typeof(ParensStartToken), nameToken.lineNumber);
+					pos++;
+					StringToken stringToken = (StringToken)expect(tokens, pos + 1, typeof(StringToken), startToken.lineNumber);
+					pos++;
+					Token endToken = expect(tokens, pos + 1, typeof(ParensEndToken), stringToken.lineNumber);
+					pos++;
+					
+					for (int i = filePos; i < lines.Length; i++) {
+						if (lines[i].Contains(stringToken.text)) {
+							filePos = i;
+							break;
+						}
+					}
+					break;
+				}
+				case "reverse_find_line_with": {
+					Token startToken = expect(tokens, pos + 1, typeof(ParensStartToken), nameToken.lineNumber);
+					pos++;
+					StringToken stringToken = (StringToken)expect(tokens, pos + 1, typeof(StringToken), startToken.lineNumber);
+					pos++;
+					Token endToken = expect(tokens, pos + 1, typeof(ParensEndToken), stringToken.lineNumber);
+					pos++;
+					
+					for (int i = filePos; i >= 0; i--) {
+						if (lines[i].Contains(stringToken.text)) {
+							filePos = i;
+							break;
+						}
+					}
+					break;
+				}
+				case "write_before":
+				case "write_replace":
+				case "write_after": {
+					Token startToken = expect(tokens, pos + 1, typeof(ParensStartToken), nameToken.lineNumber);
+					pos++;
+					StringToken stringToken = (StringToken)expect(tokens, pos + 1, typeof(StringToken), startToken.lineNumber);
+					pos++;
+					Token endToken = expect(tokens, pos + 1, typeof(ParensEndToken), stringToken.lineNumber);
+					pos++;
+					
+					List<Patch> linePatches;
+					if (!filePatches.ContainsKey(filePos)) {
+						linePatches = new List<Patch>();
+						filePatches[filePos] = linePatches;
+					}
+					else
+						linePatches = filePatches[filePos];
+					
+					PatchType type = writeFunctionTypes[nameToken.name];
+					linePatches.Add(new Patch(type, stringToken.text, critical, owner));
+					break;
+				}
+				default:
+					throw new Exception($"At line {nameToken.lineNumber}: unknown operation {nameToken.name}");
+			}
+		}
+		else {
+			throw new Exception($"Unexpected token {token.GetType().Name} at line {token.lineNumber}");
+		}
+		pos++;
+	}
+	return pos;
+}
+
+Token expect(Token[] tokens, int pos, Type type, int lastLineNumber) {
+	if (pos >= tokens.Length) {
+		throw new Exception($"At line {lastLineNumber}: Expected {type.Name}, found end of file");
+	}
+	Token token = tokens[pos];
+	if (!type.IsInstanceOfType(token)) {
+		throw new Exception($"At line {token.lineNumber}: Expected {type.Name}, found {token.GetType().Name}");
+	}
+	return token;
+}
+

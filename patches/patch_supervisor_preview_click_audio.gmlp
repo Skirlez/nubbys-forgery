@@ -1,0 +1,7 @@
+meta:
+target = gml_Object_obj_SupervisorPreviewMAIN_Step_0
+patch:
+find_line_with('switch (SVPreviewVal)')
+write_before(
+	'on_supervisor_preview_choose_clicked_audio()'
+)

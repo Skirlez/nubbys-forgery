@@ -1,0 +1,7 @@
+// Instantiate the modloader object
+meta:
+target = gml_Object_obj_Debug_Create_0
+patch:
+write_before(
+	'instance_create_depth(0, 0, 0, obj_modloader)'
+)

@@ -1,0 +1,10 @@
+meta:
+target = gml_Object_obj_BuildInfo_Draw_0
+patch:
+find_line_with(
+	'scr_Text("gameversion"'
+)
+write_before('
+	draw_text(16, 1054 - 56, get_nf_version_string());
+	draw_text(16, 1054 - 28, get_nf_loaded_string());
+')
