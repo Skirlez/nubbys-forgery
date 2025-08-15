@@ -52,8 +52,9 @@ Below is a list of what I want the modloader to have with a tick with what's imp
 See the wiki: [Windows](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Windows)), [Linux](https://github.com/Skirlez/nubbys-forgery/wiki/Building-Nubby's-Forgery-(Linux))
 
 ## License
-Catspeak, GMLspeak are licensed under MIT license. Therefore, all of their code files are licensed under the MIT license.
-The rest of the code is licensed under the AGPLv3 license.
+The project is licensed under the LGPLv3 license (LICENSE.md). GPLv3 license text available in (COPY-OF-GPL-3.0.md)
+Catspeak, GMLspeak are originally licensed under the MIT license (see GMLspeak_LICENSE and catspeak_LICENSE)
+
 
 ## Contributing
 Please contribute

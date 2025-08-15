@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Shell script to build Nubby's Forgery's GameMaker project and merge it with Nubby's Number Factory
 
@@ -48,45 +48,6 @@ if [ ! -f "$NNF_PATH/clean_data.win" ]; then
       exit 1
   fi
 fi
-
-
-IGOR_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.11.1.160/bin/igor/linux/x64/Igor"
-RUNTIME_PATH="$GAMEMAKER_CACHE_PATH/runtimes/runtime-2023.11.1.160"
-
-if [ -f "./data.win" ]; then
-  echo "Removing old data.win"
-  rm ./data.win
-fi
-
-echo "-------------------------------"
-echo "Building NF's GameMaker project"
-echo "-------------------------------"
-
-
-$IGOR_PATH \
-    -j=8 \
-    --user="$USER_DIRECTORY_PATH" \
-    --project="$MODLOADER_PROJECT_PATH/nubbys-forgery.yyp" \
-    --runtimePath="$RUNTIME_PATH" \
-    --tf="nubbys-forgery.zip" \
-    --temp="./temp/" \
-    -- Linux Package
-
-cp ./output/nubbys-forgery/package/assets/game.unx ./data.win
-if [ $? -eq 0 ]; then
-    echo "Building finished."
-else
-    echo "Could not build NF:"
-    echo "Something failed. Could not find game.unx."
-    exit 1
-fi
-
-if [ -d "./output" ]; then
-  echo "Removing output folder and zip"
-  rm -rf ./output
-  rm nubbys-forgery.zip
-fi
-
 
 
 echo "-----------------------------------"
